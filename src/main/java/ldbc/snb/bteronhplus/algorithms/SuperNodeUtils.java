@@ -2,7 +2,7 @@ package ldbc.snb.bteronhplus.algorithms;
 
 import ldbc.snb.bteronhplus.structures.BlockModel;
 import ldbc.snb.bteronhplus.structures.SuperNode;
-import ldbc.snb.bteronhplus.structures.SuperNodeCluster;
+import ldbc.snb.bteronhplus.structures.CommunityCluster;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,11 +10,11 @@ import java.util.Map;
 
 public class SuperNodeUtils {
 
-    private static SuperNodeCluster buildSuperNodeClusterHierarchy( List<BlockModel> blockModelHierarchy,
-                                                                    Map<Long, SuperNodeCluster> clusters,
-                                                                    long id,
-                                                                    List<Long> children,
-                                                                    int level
+    /*private static CommunityCluster buildSuperNodeClusterHierarchy(List<BlockModel> blockModelHierarchy,
+                                                                   Map<Integer, CommunityCluster> clusters,
+                                                                   int id,
+                                                                   List<Integer> children,
+                                                                   int level
                                                                    ) {
         if(level == blockModelHierarchy.size()) {
             return clusters.get(id);
@@ -24,13 +24,13 @@ public class SuperNodeUtils {
             BlockModel blockModel = blockModelHierarchy.get(level);
 
             List<SuperNode> childrenClusters = new ArrayList<SuperNode>();
-            for(Long child : children ) {
-                List<Long> subchildren = blockModel.getChildren().get(child);
-                SuperNodeCluster cluster = buildSuperNodeClusterHierarchy(blockModelHierarchy,
-                        clusters,
-                        child,
-                        subchildren,
-                        level+1);
+            for(Integer child : children ) {
+                List<Integer> subchildren = blockModel.getChildren().get(child);
+                CommunityCluster cluster = buildSuperNodeClusterHierarchy(blockModelHierarchy,
+                                                                          clusters,
+                                                                          child,
+                                                                          subchildren,
+                                                                          level+1);
                 if(cluster != null) {
                     childrenClusters.add(cluster);
                 }
@@ -54,23 +54,23 @@ public class SuperNodeUtils {
                 }
             }
 
-            double externalRatio = 1.0 - internalDegree / (double)(totalDegree);
+            double externalRatio = 1.0 - internalDegree / (totalDegree);
 
-            return new SuperNodeCluster(id, childrenClusters,externalRatio);
+            return new CommunityCluster(id, childrenClusters, externalRatio);
 
         }
 
     }
 
-    public static SuperNodeCluster buildSuperNodeClusterHierarchy(List<BlockModel> blockModelHierarchy,
-                                                                  Map<Long,SuperNodeCluster> clusters) {
+    public static CommunityCluster buildSuperNodeClusterHierarchy(List<BlockModel> blockModelHierarchy,
+                                                                  Map<Integer,CommunityCluster> clusters) {
 
 
         BlockModel root = blockModelHierarchy.get(0);
 
         List<SuperNode> children = new ArrayList<SuperNode>();
-        for(Map.Entry<Long,List<Long>> entry : root.getChildren().entrySet() ) {
-            SuperNodeCluster cluster = buildSuperNodeClusterHierarchy(blockModelHierarchy,
+        for(Map.Entry<Integer,List<Integer>> entry : root.getChildren().entrySet() ) {
+            CommunityCluster cluster = buildSuperNodeClusterHierarchy(blockModelHierarchy,
                                                                       clusters,
                                                                       entry.getKey(),
                                                                       entry.getValue(),
@@ -84,6 +84,7 @@ public class SuperNodeUtils {
             return null;
         }
 
-        return new SuperNodeCluster(0, children,0.0);
+        return new CommunityCluster(0, children, 0.0);
     }
+    */
 }

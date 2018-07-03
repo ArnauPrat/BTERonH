@@ -3,7 +3,7 @@ package ldbc.snb.bteronhplus.structures;
 
 import java.util.*;
 
-public class CorePeripheryCommunityStreamer implements SuperNodeStreamer {
+public class CorePeripheryCommunityStreamer implements CommunityStreamer {
 
     protected static int NUM_MODELS_PER_SIZE = 100;
 
@@ -462,11 +462,11 @@ public class CorePeripheryCommunityStreamer implements SuperNodeStreamer {
         
     }
 
-    public CorePeripheryCommunityStreamer(GraphStats graphStats) {
+    public CorePeripheryCommunityStreamer(GraphStats graphStats, Random random) {
+        this.random = random;
         communityModels = new HashMap<Integer, List<CommunityModel>>();
         communities = new ArrayList<Community>();
         this.graphStats = graphStats;
-        this.random = new Random();
         this.nextCommunityId = 0;
 
         for(Integer size : graphStats.getCommunitySizes()) {
@@ -488,10 +488,15 @@ public class CorePeripheryCommunityStreamer implements SuperNodeStreamer {
             communityModels.put(size, models);
         }
     }
-
-
+    
+    
     @Override
-    public SuperNode next() {
+    public Community getModel(int id) {
+        return null;
+    }
+    
+    @Override
+    public Community next() {
         int nextCommunitySize = (int) graphStats.getCommunitySizeDistribution().getNext();
         CommunityModel model = null;
         model = communityModels.get(nextCommunitySize).get(random.nextInt(NUM_MODELS_PER_SIZE));

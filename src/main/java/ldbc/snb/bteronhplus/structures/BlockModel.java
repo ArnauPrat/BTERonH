@@ -10,9 +10,9 @@ public class BlockModel {
 
     public static class ModelEntry {
 
-        public long id;
+        public int id;
         public double size;
-        public HashMap<Long,Double> degree = new HashMap<Long,Double>();
+        public HashMap<Integer,Double> degree = new HashMap<Integer,Double>();
         public double totalDegree = 0.0;
         public double externalDegree = 0.0;
 
@@ -24,11 +24,11 @@ public class BlockModel {
 
         public ModelEntry(String entry) {
             String fields[] = entry.split(SEPARATOR);
-            this.id = Long.parseLong(fields[0]);
+            this.id = Integer.parseInt(fields[0]);
             this.size = Double.parseDouble(fields[1]);
             for( int i = 2; i < fields.length; ++i) {
                 String cell[] = fields[i].split(":");
-                long idOther = Long.parseLong(cell[0]);
+                int idOther = Integer.parseInt(cell[0]);
                 double degree = Double.parseDouble(cell[1]);
                 this.degree.put(idOther,degree);
                 totalDegree+=degree;
@@ -40,8 +40,8 @@ public class BlockModel {
 
     }
 
-    Map<Long, ModelEntry> entries = new HashMap<Long, ModelEntry>();
-    Map<Long, List<Long>> children = new HashMap<Long, List<Long>>();
+    Map<Integer, ModelEntry> entries = new HashMap<Integer, ModelEntry>();
+    Map<Integer, List<Integer>> children = new HashMap<Integer, List<Integer>>();
 
     public BlockModel(String blockmodel, String childrenmodel) {
         String[] lines = blockmodel.split("\n");
@@ -55,15 +55,15 @@ public class BlockModel {
         lines = childrenmodel.split("\n");
         for(int i = 0; i < lines.length; ++i) {
             String line[] = lines[i].split(SEPARATOR);
-            Long id = Long.parseLong(line[0]);
-            List<Long> blockChildren = children.get(id);
+            int id = Integer.parseInt(line[0]);
+            List<Integer> blockChildren = children.get(id);
             if(blockChildren == null) {
-                blockChildren = new ArrayList<Long>();
+                blockChildren = new ArrayList<Integer>();
                 children.put(id,blockChildren);
             }
 
             for(int j = 1; j < line.length; ++j) {
-                blockChildren.add(Long.parseLong(line[j]));
+                blockChildren.add(Integer.parseInt(line[j]));
             }
         }
     }
@@ -72,11 +72,11 @@ public class BlockModel {
         return new BlockModel("0|1.0|0:1.0", "0|0");
     }
 
-    public Map<Long, ModelEntry> getEntries() {
+    public Map<Integer, ModelEntry> getEntries() {
         return entries;
     }
 
-    public void setChildren(Map<Long,List<Long>> children) {
+    public void setChildren(Map<Integer,List<Integer>> children) {
         this.children = children;
     }
 
@@ -84,7 +84,7 @@ public class BlockModel {
         return entries.size();
     }
 
-    public Map<Long, List<Long>> getChildren() {
+    public Map<Integer, List<Integer>> getChildren() {
         return children;
     }
 }

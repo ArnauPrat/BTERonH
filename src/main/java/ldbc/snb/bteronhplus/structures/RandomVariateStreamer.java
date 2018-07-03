@@ -6,7 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
 
-public class RandomVariateStreamer implements SuperNodeStreamer {
+public class RandomVariateStreamer implements CommunityStreamer {
 
     public static class RandomNode implements SuperNode {
 
@@ -34,24 +34,19 @@ public class RandomVariateStreamer implements SuperNodeStreamer {
         }
 
         @Override
-        public long getId() {
+        public int getId() {
             return id;
         }
 
         @Override
-        public boolean sampleEdge(FileWriter writer, Random random, long offset) throws IOException {
-            return false;
+        public void sampleEdges(FileWriter writer, Random random, long numEdges, long offset) throws IOException {
         }
 
         @Override
         public long sampleNode(Random random, long offset) {
             return 0;
         }
-        
-        @Override
-        public void dumpInternalEdges(FileWriter writer, long offset) {
-        
-        }
+    
     }
 
     RandomVariateGen randomVariateGen;
@@ -60,9 +55,16 @@ public class RandomVariateStreamer implements SuperNodeStreamer {
     public RandomVariateStreamer(RandomVariateGen randomVariateGen) {
         this.randomVariateGen = randomVariateGen;
     }
-
+    
+    
     @Override
-    public SuperNode next() {
-        return new RandomNode(nextId++, (int)(double)randomVariateGen.nextDouble());
+    public Community getModel(int id) {
+        return null;
+    }
+    
+    @Override
+    public Community next() {
+        return null;
+        //return new RandomNode(nextId++, (int)(double)randomVariateGen.nextDouble());
     }
 }

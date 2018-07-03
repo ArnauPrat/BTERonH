@@ -7,30 +7,38 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.*;
 
-public class RealCommunityStreamer implements SuperNodeStreamer {
+public class RealCommunityStreamer implements CommunityStreamer {
     
-    private HashMap<Integer, List<Community>> models;
+    private ArrayList<Community> models;
     private GraphStats stats;
     private Random random;
     
-    public RealCommunityStreamer(GraphStats stats, String communitiesFile, String degreeFile)  {
-        random = new Random();
+    public RealCommunityStreamer(GraphStats stats,
+                                 String communitiesFile,
+                                 String degreeFile,
+                                 Random random)  {
+        this.random = random;
         this.stats = stats;
         HashMap<Integer, Integer> degrees =  new HashMap<Integer, Integer>();
         Configuration conf  = new Configuration();
-        this.models = new HashMap<Integer, List<Community>>();
+        this.models = new ArrayList<Community>();
+        long totalObservedEdges = 0;
+        long totalExcessDegree = 0;
+        long totalObservedNodes = 0;
         try {
     
+            ArrayList<Double> communitySizes = new ArrayList<Double>();
             BufferedReader reader = FileTools.getFile(degreeFile, conf);
             String line;
             line = reader.readLine();
             while (line != null) {
-                String[] node = line.split(" ");
+                String[] node = line.split("\\|");
                 degrees.put(Integer.parseInt(node[0]), Integer.parseInt(node[1]));
                 line = reader.readLine();
             }
             reader.close();
             
+            int counter = 0;
             reader = FileTools.getFile(communitiesFile, conf);
             line = reader.readLine();
             while (line != null) {
@@ -38,7 +46,7 @@ public class RealCommunityStreamer implements SuperNodeStreamer {
                 HashMap<Integer, Integer> localDegrees = new HashMap<Integer,Integer>();
                 int nextId = 0;
                 ArrayList<Edge> edges = new ArrayList<Edge>();
-                String[] community = line.split(" ");
+                String[] community = line.split("\\|");
                 for (int i = 0; i < community.length; ++i) {
                     String[] endpoints = community[i].split(":");
                     int tail = Integer.parseInt(endpoints[0]);
@@ -58,6 +66,8 @@ public class RealCommunityStreamer implements SuperNodeStreamer {
                     head = idMap.get(head);
                     
                     edges.add(new Edge(tail, head));
+    
+                    totalObservedEdges++;
                 }
     
                 Map<Integer, Integer > degree = new HashMap<Integer, Integer>();
@@ -70,19 +80,24 @@ public class RealCommunityStreamer implements SuperNodeStreamer {
                 int excessDegree[] = new int[size];
                 for(Map.Entry<Integer,Integer> entry : degree.entrySet()) {
                     Integer nodeDegree = localDegrees.get(entry.getKey());
-                    excessDegree[entry.getKey()] = (int) Math.max(0.0, nodeDegree - entry
-                        .getValue());
+                    int localId = entry.getKey();
+                    excessDegree[localId] = nodeDegree - entry
+                        .getValue();
+                    if(excessDegree[localId] < 0) {
+                        throw new RuntimeException("Node with excess degree < 0");
+                    }
+                    totalExcessDegree+=excessDegree[localId];
                 }
                 
-                List<Community> communities = models.get(size);
-                if(communities == null) {
-                    communities = new ArrayList<Community>();
-                    models.put(size, communities);
-                }
-                communities.add(new Community(0, size, edges, excessDegree));
+                models.add(new Community(counter, size, edges, excessDegree));
+                communitySizes.add((double)size);
+                totalObservedNodes+=size;
                 line = reader.readLine();
+                counter++;
             }
             reader.close();
+            System.out.println("Total size in communities models: "+totalObservedNodes);
+            System.out.println("Total degree in communities models: "+(totalObservedEdges*2+totalExcessDegree));
         } catch (IOException e ) {
             e.printStackTrace();
             System.exit(1);
@@ -90,11 +105,14 @@ public class RealCommunityStreamer implements SuperNodeStreamer {
     }
     
     @Override
-    public SuperNode next() {
-        EmpiricalDistribution sizeDistribution = stats.getCommunitySizeDistribution();
-        int nextSize = (int)sizeDistribution.getNext();
-        List<Community> communities = models.get(nextSize);
-        Community community = communities.get(random.nextInt(communities.size()));
+    public Community getModel(int id) {
+        return models.get(id);
+    }
+    
+    @Override
+    public Community next() {
+        Community community = models.get(random.nextInt(models.size()));
         return community;
     }
+    
 }
