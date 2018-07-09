@@ -10,14 +10,11 @@ import java.util.*;
 public class RealCommunityStreamer implements CommunityStreamer {
     
     private ArrayList<Community> models;
-    private GraphStats stats;
     private Random random;
     
-    public RealCommunityStreamer(GraphStats stats,
-                                 String communitiesFile,
+    public RealCommunityStreamer(String communitiesFile,
                                  Random random)  {
         this.random = random;
-        this.stats = stats;
         Configuration conf  = new Configuration();
         this.models = new ArrayList<Community>();
         long totalObservedEdges = 0;
