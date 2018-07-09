@@ -3,6 +3,8 @@ package ldbc.snb.bteronhplus.structures;
 
 import java.util.*;
 
+/*
+
 public class CorePeripheryCommunityStreamer implements CommunityStreamer {
 
     protected static int NUM_MODELS_PER_SIZE = 100;
@@ -20,46 +22,6 @@ public class CorePeripheryCommunityStreamer implements CommunityStreamer {
     }
 
         
-
-        /*private Double  score(Solution solution,
-                              List<NodeInfo> nodesInfo) {
-            
-            int numNodes = nodesInfo.size();
-            double expectedTriangles[] = new double[numNodes];
-            double expectedDegree[] = new double[numNodes];
-            
-            for(int i = 0; i < solution.periphery; ++i) {
-                expectedTriangles[i] = Math.pow(solution.coreDensity,3)*(numNodes-1)*(numNodes-2)/2.0;
-                expectedDegree[i] = (numNodes-1)*solution.coreDensity;
-                for(int j = solution.periphery; j < numNodes; ++j) {
-                    expectedTriangles[i] += Math.pow(solution.peripheryDensity[j],2)*(numNodes-1)*solution.coreDensity;
-                    expectedDegree[i] += solution.peripheryDensity[j];
-                }
-            }
-            
-            for(int i = solution.periphery; i < numNodes; ++i) {
-                expectedTriangles[i] = Math.pow(solution.peripheryDensity[i],2)*numNodes*(numNodes-1)*solution
-                    .coreDensity/2.0;
-                expectedDegree[i] = numNodes*solution.peripheryDensity[i];
-            }
-            
-            double score = 0.0;
-            
-            for(int i = 0; i < numNodes; ++i) {
-                score += expectedDegree[i] > nodesInfo.get(i).degree ? Math.pow(expectedDegree[i] - nodesInfo.get(i)
-                                                                                 .degree,
-                                                                         2) : 0.0;
-                score += nodesInfo.get(i).numTriangles > 0 ? Math.pow(expectedTriangles[i] - nodesInfo.get(i)
-                                                                    .numTriangles,
-                                  2) : 0.0;
-            }
-            
-            return score;
-            
-        }
-        */
-        
-    
     public static class CommunityModel {
         
         public int            size                  = 0;
@@ -294,58 +256,6 @@ public class CorePeripheryCommunityStreamer implements CommunityStreamer {
         return false;
     }
     
-    /*private static class Stats {
-        public int triangleBudgetPeriphery = 0;
-        public int triangleBudgetCore = 0;
-        public int degreeBudgetPeriphery = 0;
-        public int degreeBudgetCore = 0;
-    }
-    
-    private static int triangleBudget(CommunityModel bucket) {
-    
-        int budget = (int)(bucket.coreSize*(bucket.coreSize-1)*(bucket.coreSize-2)*Math.pow(bucket.coreDensity,3) / 2);
-        
-        int stubs[] = new int[bucket.nodeInfo.size()];
-        for(int i = 0; i < bucket.nodeInfo.size(); ++i) {
-            stubs[i] = Math.min(bucket.nodeInfo.get(i).degree, bucket.nodeInfo.get(i).numTriangles);
-        }
-        
-        Arrays.sort(stubs);
-        
-        for(int i = stubs.length-1; i > 0; --i) {
-            for(int j = i-1; j > 0 && stubs[i] > 0; --j) {
-                if(stubs[j] > 0) {
-                    stubs[i]--;
-                    stubs[j]--;
-                    budget++;
-                }
-            }
-        }
-        
-        return budget;
-        
-        
-    }
-    
-    private static Stats buildStats(List<CommunityModel> buckets, List<NodeInfo> periphery) {
-    
-        Stats stats = new Stats();
-        for(CommunityModel bucket : buckets) {
-            stats.triangleBudgetCore+=triangleBudget(bucket);
-            for(NodeInfo nodeInfo : bucket.nodeInfo) {
-                stats.degreeBudgetCore+=nodeInfo.degree;
-            }
-            stats.degreeBudgetCore-=bucket.coreSize*(bucket.coreSize - 1)*bucket.coreDensity;
-        }
-    
-        for(NodeInfo nodeInfo : periphery) {
-            stats.triangleBudgetPeriphery+=nodeInfo.numTriangles;
-            stats.degreeBudgetPeriphery += (int)((1+Math.sqrt(1-4*2*nodeInfo.numTriangles))/2);
-        }
-        
-        return stats;
-        
-    }*/
     
     
     public static List<CommunityModel> createModels(int modelSize,
@@ -403,23 +313,13 @@ public class CorePeripheryCommunityStreamer implements CommunityStreamer {
             int index = findBucket(buckets, nextNode, start % buckets.size());
             if(index >= 0) {
                 addToBucket(buckets.get(index), nextNode);
-            } else /*if(!accommodateToCore(buckets, nextNode))*/ {
+            } else if(!accommodateToCore(buckets, nextNode)) {
                 remainingNodes.add(nextNode);
             }
-            //start++;
-            /*if(!accommodateToCore(buckets, nextNode)) {
-                remainingNodes.add(nextNode);
-            }*/
         }
         
         
         List<NodeInfo> peripheryNodes = new ArrayList<NodeInfo>(remainingNodes);
-        /*List<NodeInfo> peripheryNodes = new ArrayList<NodeInfo>();
-        for(NodeInfo nextNode : remainingNodes) {
-            if(!accommodateToCore(buckets, nextNode)) {
-                peripheryNodes.add(nextNode);
-            }
-        }*/
         
         for(CommunityModel bucket : buckets) {
             int coreSize = bucket.coreSize;
@@ -505,3 +405,4 @@ public class CorePeripheryCommunityStreamer implements CommunityStreamer {
         return community;
     }
 }
+*/

@@ -81,7 +81,7 @@ public class Main {
         //BasicCommunityStreamer communityStreamer = new BasicCommunityStreamer(graphStats);
         //CorePeripheryCommunityStreamer communityStreamer = new CorePeripheryCommunityStreamer(graphStats,random);
         RealCommunityStreamer communityStreamer = new RealCommunityStreamer(graphStats, arguments.modulesPrefix+
-            "communities", arguments.modulesPrefix+"degreemap", random);
+                                                        "communities", random);
         List<Map<Integer,Long>> partition = Partitioning.partition(random, blockModel,
                                                                        communityStreamer,
                                                                        arguments.graphSize);
@@ -90,8 +90,10 @@ public class Main {
         long totalDegree = 0L;
         long totalExternalDegree = 0L;
         long totalNumNodes = 0L;
-        long internalDegree[] = new long[partition.size()];
-        Arrays.fill(internalDegree, 0L);
+        long internalDegreePerBlock[] = new long[partition.size()];
+        long totalDegreePerBlock[] = new long[partition.size()];
+        Arrays.fill(internalDegreePerBlock, 0L);
+        Arrays.fill(totalDegreePerBlock, 0L);
         
         int index = 0;
         for(Map<Integer,Long> counts : partition) {
@@ -100,7 +102,8 @@ public class Main {
                 totalNumNodes += entry.getValue()*model.getSize();
                 totalDegree += entry.getValue()*(model.getExternalDegree()+model.getInternalDegree());
                 totalExternalDegree += entry.getValue()*(model.getExternalDegree());
-                internalDegree[index] += entry.getValue()*model.getInternalDegree();
+                internalDegreePerBlock[index] += entry.getValue()*model.getInternalDegree();
+                totalDegreePerBlock[index] += entry.getValue()*(model.getInternalDegree()+model.getExternalDegree());
             }
             index++;
         }
@@ -145,17 +148,14 @@ public class Main {
                 BlockSampler sampler = blockSamplers.get(entry.id);
                 GraphBuilder builder = SimpleGraph.createBuilder(DefaultEdge.class);
                 
+                double expectedDegree = entry.totalDegree * totalDegree;
                 if(entry.id == neighbor.getKey()) {
     
-                    sampler.generateCommunityEdges(outputFile,
-                                                    partition.get(entry.id),
-                                                    communityStreamer,
-                                                    offsets[entry.id],
-                                                    builder);
     
-                    long numEdges = (Math.round(neighbor.getValue() * totalDegree) - internalDegree[entry.id])/2;
+                    long numEdges = (Math.round(neighbor.getValue() * totalDegree) - internalDegreePerBlock[entry
+                        .id])/2;
     
-    
+                    
                     if(numEdges < (sampler.getNumCommunities()-1) && sampler.getNumCommunities() > 1){
                         totalNumEdgesBelowThreshold++;
                         if(numEdges < 0) totalNumEdgesNegative++;
@@ -163,8 +163,19 @@ public class Main {
                         numCommunitiesIfWellConnected++;
                     }
     
-                    numEdges -= sampler.getNumCommunities() - 1;
+                    sampler.generateCommunityEdges(outputFile,
+                                                   partition.get(entry.id),
+                                                   communityStreamer,
+                                                   offsets[entry.id],
+                                                   builder);
+    
+                    long darwiniEdges = sampler.darwini(outputFile,random,offsets[entry.id]);
+                    totalExternalGeneratedEdges+=darwiniEdges;
+                    numEdges-=darwiniEdges;
+                    
                     sampler.generateConnectedGraph(outputFile, random, offsets[entry.id], builder);
+    
+                    numEdges -= sampler.getNumCommunities() - 1;
                     
                     for(int i = 0; i < numEdges; ++i) {
                         long node1 = sampler.sample(random, offsets[entry.id]);
@@ -172,6 +183,7 @@ public class Main {
                         totalExpectedGeneratedEdges++;
                         if (node1 != -1 && node2 != -1) {
                             outputFile.write(node1 + "\t" + node2 + "\n");
+                            totalExternalGeneratedEdges++;
     
                             if(node1 != node2) {
                                 builder.addEdge(node1, node2);
@@ -200,7 +212,7 @@ public class Main {
     
                     for(int i = 0; i < numEdges; ++i) {
                         long node1 = sampler1.sample(random, offsets[entry.id]);
-                        long node2 = sampler2.sample(random, offsets[entry.id]);
+                        long node2 = sampler2.sample(random, offsets[neighbor.getKey()]);
                         totalExpectedGeneratedEdges++;
                         if (node1 != -1 && node2 != -1) {
                             outputFile.write(node1 + "\t" + node2 + "\n");

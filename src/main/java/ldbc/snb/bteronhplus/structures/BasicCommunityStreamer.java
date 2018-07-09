@@ -10,7 +10,7 @@ import org.jgrapht.graph.SimpleGraph;
 import org.jgrapht.graph.builder.GraphBuilder;
 
 import java.util.*;
-
+/*
 public class BasicCommunityStreamer implements CommunityStreamer {
 
     protected static int NUM_MODELS_PER_SIZE = 10;
@@ -289,3 +289,4 @@ public class BasicCommunityStreamer implements CommunityStreamer {
         return community;
     }
 }
+*/
