@@ -95,7 +95,7 @@ public class BlockSampler {
                 for (int j = 0; j < numModels[i]; ++j) {
                     if(model.getExternalDegree() > 0) {
                         models.add(new Pair<Community,Long>(model, nextOffset));
-                        nextOffset += models.size();
+                        nextOffset += model.getSize();
                     }
                 }
             }
