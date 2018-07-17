@@ -154,10 +154,10 @@ public class Partitioning {
     
     public static List<Map<Integer,Long>> partition(Random random, BlockModel blockModel,
                                                     CommunityStreamer streamer,
-                                                    long numNodes,
-                                                    long maxNodes,
-                                                    long threadId,
-                                                    long numThreads) {
+                                                    long targetNumNodes,
+                                                    long threadNumNodes,
+                                                    int  threadId,
+                                                    int  numThreads) {
 
         List<Map<Integer,Long>> superNodesPerBlock = new ArrayList<Map<Integer,Long>>();
         int numBlocks = blockModel.getNumBlocks();
@@ -187,7 +187,7 @@ public class Partitioning {
         long totalDegree = 0L;
     
         List<SuperNode> superNodes = new ArrayList<SuperNode>();
-        while( totalNodes < maxNodes) {
+        while( totalNodes < threadNumNodes) {
             SuperNode nextSuperNode = streamer.next();
             superNodes.add(nextSuperNode);
             totalNodes+=nextSuperNode.getSize();
@@ -195,21 +195,25 @@ public class Partitioning {
             totalDegree+=nextSuperNode.getExternalDegree();
         }
         
-        /*float factor = numNodes / (double)maxNodes;
+        double factor = targetNumNodes / (double)threadNumNodes;
         totalDegree *= factor;
     
         for(int i = 0; i < numBlocks; ++i) {
             BlockModel.ModelEntry entry = blockModel.getEntries().get(i);
-            if(entry.size * maxNodes < 5000) {
+            if(entry.size * targetNumNodes < 5000) {
                 if (i % numThreads != threadId) {
-                    currentBlockSize[i] = (long) (entry.size * maxNodes);
+                    currentBlockSize[i] = (long) (entry.size * targetNumNodes);
                     long currentTotalDegree = (long)(entry.totalDegree * totalDegree);
-                    long currentExternalDegree =
-                    currentI[i] = (long) (entry. * maxNodes);
+                    currentBlockInternalDegree[i] = (long) (currentTotalDegree*(1-entry.externalDegree));
+                    currentBlockExternalDegree[i] = (long) (currentTotalDegree*(entry.externalDegree));
                 }
             } else {
+                currentBlockSize[i] = (numThreads-1)*(long) (entry.size * targetNumNodes) / numThreads;
+                long currentTotalDegree = (numThreads-1)*(long)(entry.totalDegree * totalDegree) / numThreads;
+                currentBlockInternalDegree[i] = (long) (currentTotalDegree*(1-entry.externalDegree));
+                currentBlockExternalDegree[i] = (long) (currentTotalDegree*(entry.externalDegree));
             }
-        }*/
+        }
     
         long totalInternalDegree = 0L;
         long totalExternalDegree = 0L;
@@ -233,8 +237,10 @@ public class Partitioning {
         long totalObservedDegree = 0L;
         
         for( SuperNode nextSuperNode : superNodes) {
+    
+            int bestBlock = random.nextInt(blockModel.getNumBlocks() / numThreads);
+            bestBlock = threadId + (bestBlock * numThreads);
             
-            int bestBlock = random.nextInt(blockModel.getNumBlocks());
             double currentScore = initializePartialScores(blockModel,
                                      partialScores,
                                      totalNodes,
@@ -262,85 +268,37 @@ public class Partitioning {
                                      bestBlock);
             
             double bestImprovement = currentScore - nextScore;
-            double blockTotalDegree = currentBlockInternalDegree[bestBlock] +
-                                    currentBlockExternalDegree[bestBlock] + nextSuperNode
-                                    .getInternalDegree() + nextSuperNode.getExternalDegree();
-            
-            /*double factor = computeFactor(blockModel.getEntries().get(bestBlock),
-                              blockTotalDegree,
-                              currentBlockInternalDegree[bestBlock] + nextSuperNode.getInternalDegree(),
-                              currentBlockNumCommunities[bestBlock] + 1 );*/
-            
-            double factor = (1.0 - (currentBlockSize[bestBlock] + nextSuperNode.getSize())/(double)(blockModel
-                .getEntries().get(bestBlock).size*totalNodes));
-            factor = 1.0;
-            
-            if(bestImprovement < 0.0) {
-                bestImprovement *= 1.0/factor;
-            } else {
-                bestImprovement *= factor;
-            }
             
             for(int j = 0; j < numBlocks; ++j) {
     
+    
                 BlockModel.ModelEntry entry = blockModel.getEntries().get(j);
-                nextScore = score(blockModel,
-                                  currentScore - partialScores[j],
-                                  totalNodes,
-                                  totalDegree,
-                                  totalInternalDegree,
-                                  totalExternalDegree,
-                                  currentBlockSize,
-                                  currentBlockInternalDegree,
-                                  currentBlockExternalDegree,
-                                  currentBlockRatio,
-                                  nextSuperNode.getSize(),
-                                  nextSuperNode.getInternalDegree(),
-                                  nextSuperNode.getExternalDegree(),
-                                  j);
+    
+                if(entry.id % numThreads == threadId || entry.size*targetNumNodes >= 5000 ) {
+    
+                    nextScore = score(blockModel,
+                                      currentScore - partialScores[j],
+                                      totalNodes,
+                                      totalDegree,
+                                      totalInternalDegree,
+                                      totalExternalDegree,
+                                      currentBlockSize,
+                                      currentBlockInternalDegree,
+                                      currentBlockExternalDegree,
+                                      currentBlockRatio,
+                                      nextSuperNode.getSize(),
+                                      nextSuperNode.getInternalDegree(),
+                                      nextSuperNode.getExternalDegree(),
+                                      j);
     
     
-                double improvement = currentScore - nextScore;
+                    double improvement = currentScore - nextScore;
     
-    
-                blockTotalDegree = currentBlockInternalDegree[j] +
-                    currentBlockExternalDegree[j] + nextSuperNode
-                    .getInternalDegree() + nextSuperNode.getExternalDegree();
-    
-                if(improvement < 0.0) {
-                    improvement *= 1.0/factor;
-                } else {
-                    improvement *= factor;
-                }
-    
-                /*factor = computeFactor(entry,
-                                       blockTotalDegree,
-                                       currentBlockInternalDegree[bestBlock] + nextSuperNode.getInternalDegree(),
-                                       currentBlockNumCommunities[bestBlock] + 1 );*/
-    
-                factor = (1.0 - (currentBlockSize[j] + nextSuperNode.getSize())/(double)(entry
-                    .size*totalNodes));
-                factor = 1.0;
-    
-                if(improvement < 0.0) {
-                    improvement *= (1.0/factor);
-                } else {
-                    improvement *= factor;
-                }
-                
-                /*if(!meetsInterDegree(entry,
-                                     blockTotalDegree,
-                                     currentBlockInternalDegree[j] + nextSuperNode.getInternalDegree(),
-                                     currentBlockNumCommunities[j] + 1 )) {
-                    improvement = -Double.MAX_VALUE;
-        
-                }*/
-    
-    
-                if(improvement > bestImprovement) {
+                    if (improvement > bestImprovement) {
                         bestBlock = j;
                         bestImprovement = improvement;
                     }
+                }
             }
     
             BlockModel.ModelEntry entry = blockModel.getEntries().get(bestBlock);
@@ -373,7 +331,7 @@ public class Partitioning {
 
             if( count % 1000 == 0) {
                 System.out.println("Distributed "+count+" superNodes amounting "+totalObservedNodes+" out of " +
-                        numNodes);
+                        threadNumNodes);
             }
             count++;
         }

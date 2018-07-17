@@ -5,6 +5,7 @@ import org.jgrapht.graph.builder.GraphBuilder;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.*;
 
 public class BlockSampler {
@@ -84,7 +85,8 @@ public class BlockSampler {
     
     }
     
-    public void generateConnectedGraph(FileWriter writer, Random random, long baseOffset, GraphBuilder builder) throws
+    public void generateConnectedGraph(EdgeWriter writer, Random random, long baseOffset, GraphBuilder builder)
+        throws
         IOException {
         
         if(numModels.length > 1) {
@@ -122,7 +124,7 @@ public class BlockSampler {
                     long node1 = root.sampleNode(random, models.get(0).getSecond());
                     long node2 = nextModel.sampleNode(random, models.get(i).getSecond());
         
-                    writer.write(node1 + "\t" + node2 + "\n");
+                    writer.write(node1, node2);
                     if(node1 != node2)
                         builder.addEdge(node1, node2);
                 }
@@ -132,11 +134,11 @@ public class BlockSampler {
     
     }
     
-    public void generateCommunityEdges(FileWriter writer,
-                                              Map<Integer, Long> counts,
-                                              CommunityStreamer communityStreamer,
-                                              long offset,
-                                              GraphBuilder builder) throws IOException {
+    public void generateCommunityEdges(EdgeWriter writer,
+                                       Map<Integer, Long> counts,
+                                       CommunityStreamer communityStreamer,
+                                       long offset,
+                                       GraphBuilder builder) throws IOException {
         
         for(Map.Entry<Integer,Long> entry : counts.entrySet()) {
             Community model = communityStreamer.getModel(entry.getKey());
@@ -145,7 +147,7 @@ public class BlockSampler {
                 for(Edge edge : model.getEdges()) {
                     long tail = (currentOffset + edge.getTail());
                     long head = (currentOffset + edge.getHead());
-                    writer.write( tail + "\t" + head + "\n");
+                    writer.write(tail, head);
                     builder.addEdge(tail,head);
                 }
                 currentOffset += model.getSize();
@@ -192,7 +194,7 @@ public class BlockSampler {
     }
     
     
-    public long darwini(FileWriter writer,
+    public long darwini(EdgeWriter writer,
                         Random random,
                         long offset) throws IOException {
     
@@ -262,7 +264,7 @@ public class BlockSampler {
                         if (random.nextDouble() < prob) {
                             long tail = nextBucket.getNodes().get(i).nodeId;
                             long head = nextBucket.getNodes().get(j).nodeId;
-                            writer.write(tail + "\t" + head + "\n");
+                            writer.write(tail, head);
                             numGeneratedEdges++;
                         }
                     }

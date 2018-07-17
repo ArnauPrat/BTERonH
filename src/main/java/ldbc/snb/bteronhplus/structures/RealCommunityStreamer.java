@@ -27,6 +27,7 @@ public class RealCommunityStreamer implements CommunityStreamer {
             BufferedReader reader = FileTools.getFile(communitiesFile, conf);
             String line = reader.readLine();
             while (line != null) {
+    
                 HashMap<Integer, Integer> idMap = new HashMap<Integer, Integer>();
                 ArrayList<Integer> localDegrees = new ArrayList<Integer>();
                 ArrayList<Double>  clusteringCoefficient = new ArrayList<Double>();
@@ -63,11 +64,14 @@ public class RealCommunityStreamer implements CommunityStreamer {
                     if(excessDegree.get(i) < 0) {
                         throw new RuntimeException("Node with excess degree < 0");
                     }
+                    
                     totalExcessDegree+=excessDegree.get(i);
                 }
                 
                 models.add(new Community(counter,excessDegree, clusteringCoefficient, edges));
                 communitySizes.add((double)excessDegree.size());
+    
+    
                 totalObservedNodes+=excessDegree.size();
                 line = reader.readLine();
                 counter++;
