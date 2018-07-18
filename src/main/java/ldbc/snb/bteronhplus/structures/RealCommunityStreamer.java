@@ -10,11 +10,8 @@ import java.util.*;
 public class RealCommunityStreamer implements CommunityStreamer {
     
     private ArrayList<Community> models;
-    private Random random;
     
-    public RealCommunityStreamer(String communitiesFile,
-                                 Random random)  {
-        this.random = random;
+    public RealCommunityStreamer(String communitiesFile )  {
         Configuration conf  = new Configuration();
         this.models = new ArrayList<Community>();
         long totalObservedEdges = 0;
@@ -91,7 +88,7 @@ public class RealCommunityStreamer implements CommunityStreamer {
     }
     
     @Override
-    public Community next() {
+    public Community next(Random random) {
         Community community = models.get(random.nextInt(models.size()));
         return community;
     }

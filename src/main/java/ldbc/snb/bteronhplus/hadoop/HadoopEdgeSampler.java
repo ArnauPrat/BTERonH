@@ -108,8 +108,11 @@ public class HadoopEdgeSampler {
                 }
             }
             
+            
             // Retrieve communityStreamer
-            RealCommunityStreamer streamer = new RealCommunityStreamer(communitiesFileName, random);
+            RealCommunityStreamer streamer = new RealCommunityStreamer(communitiesFileName);
+    
+            Partitioning.printStats(blockModel, partition, streamer);
             
             // Run generator
     

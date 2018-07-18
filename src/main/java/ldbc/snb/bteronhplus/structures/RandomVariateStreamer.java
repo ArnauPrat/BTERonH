@@ -63,7 +63,7 @@ public class RandomVariateStreamer implements CommunityStreamer {
     }
     
     @Override
-    public Community next() {
+    public Community next(Random random) {
         return null;
         //return new RandomNode(nextId++, (int)(double)randomVariateGen.nextDouble());
     }

@@ -82,7 +82,7 @@ public class Main {
         //BasicCommunityStreamer communityStreamer = new BasicCommunityStreamer(graphStats);
         //CorePeripheryCommunityStreamer communityStreamer = new CorePeripheryCommunityStreamer(graphStats,random);
         RealCommunityStreamer communityStreamer = new RealCommunityStreamer(arguments.modulesPrefix+
-                                                        "communities", random);
+                                                        "communities");
         List<Map<Integer,Long>> partition = Partitioning.partition(random, blockModel,
                                                                    communityStreamer,
                                                                    arguments.graphSize,

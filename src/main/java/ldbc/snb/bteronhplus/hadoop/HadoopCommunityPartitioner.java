@@ -37,8 +37,8 @@ public class HadoopCommunityPartitioner {
     
     public static class ModelCountWritable implements Writable {
         
-        int modelId;
-        long count;
+        public int modelId;
+        public long count;
         
         public ModelCountWritable() {
             int modelId = Integer.MAX_VALUE;
@@ -92,7 +92,7 @@ public class HadoopCommunityPartitioner {
     
             Random random = new Random();
             random.setSeed(threadId);
-            RealCommunityStreamer communityStreamer = new RealCommunityStreamer(communitiesFileName, random);
+            RealCommunityStreamer communityStreamer = new RealCommunityStreamer(communitiesFileName);
             
             long nodesToGenerate = numNodes / numThreads;
     
@@ -116,6 +116,7 @@ public class HadoopCommunityPartitioner {
             }
             
             context.setStatus("Mapper "+threadId+" finished execution");
+    
             
         }
     }

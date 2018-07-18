@@ -2,10 +2,20 @@ package ldbc.snb.bteronhplus;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import ldbc.snb.bteronhplus.algorithms.Partitioning;
 import ldbc.snb.bteronhplus.hadoop.HadoopCommunityPartitioner;
 import ldbc.snb.bteronhplus.hadoop.HadoopEdgeSampler;
 import ldbc.snb.bteronhplus.structures.*;
+import ldbc.snb.bteronhplus.tools.FileTools;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.SequenceFile;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class MainHadoop {
@@ -61,14 +71,46 @@ public class MainHadoop {
         HadoopCommunityPartitioner communityPartitioner = new HadoopCommunityPartitioner();
         communityPartitioner.run(conf);
         long end = System.currentTimeMillis();
-        System.out.println("Graph Partitioned in "+(start - end)+" ms");
+        System.out.println("Graph Partitioned in "+(end - start)+" ms");
+    
+        /** Checking partition quality **/
+        String blockModelData = FileTools.readFile(FileTools.getFile(conf.get("blockModelFilePrefix"), conf));
+        String childrenData = FileTools.readFile(FileTools.getFile(conf.get("blockModelFilePrefix")+".children",conf));
+        BlockModel blockModel = new BlockModel(blockModelData, childrenData);
+    
+        LongWritable blockId = new LongWritable();
+        HadoopCommunityPartitioner.ModelCountWritable modelCount = new HadoopCommunityPartitioner
+            .ModelCountWritable();
+    
+        // Retrieve partition
+        List<Map<Integer, Long>> partition = new ArrayList<Map<Integer,Long>>();
+        for(int i = 0; i < blockModel.getNumBlocks(); ++i) {
+            partition.add(new HashMap<Integer,Long>());
+        }
+    
+        for(int i = 0; i < conf.getInt("numThreads",1); ++i) {
+            String partitionFile = conf.get("partitionFile") + "/part-r-0000"+i;
+            SequenceFile.Reader reader = new SequenceFile.Reader(conf,
+                                                                 SequenceFile.Reader.file(new Path(partitionFile)));
+        
+            while (reader.next(blockId, modelCount)) {
+                Map<Integer, Long> count = partition.get((int) blockId.get());
+                count.merge(modelCount.modelId, modelCount.count, Long::sum);
+            }
+        }
+    
+        RealCommunityStreamer streamer = new RealCommunityStreamer(conf.get("communitiesFile"));
+    
+        Partitioning.printStats(blockModel, partition, streamer);
+        /*******/
     
         System.out.println("Sampling Edges");
         start = System.currentTimeMillis();
         HadoopEdgeSampler edgeSampler = new HadoopEdgeSampler();
         edgeSampler.run(conf);
         end = System.currentTimeMillis();
-        System.out.println("Edges sampled in "+(start - end)+" ms");
+        System.out.println("Edges sampled in "+(end - start)+" ms");
+    
         
     }
 }
