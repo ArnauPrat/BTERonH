@@ -1,6 +1,7 @@
 package ldbc.snb.bteronhplus.tools;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -22,12 +23,28 @@ public class FileTools {
         }
         return null;
     }
+    
+    public static String readFile(BufferedReader reader) throws IOException {
+        StringBuilder builder = new StringBuilder();
+        char chars[] = new char[4096];
+        int numRead = 0;
+        while((numRead = reader.read(chars)) > 0) {
+            if(numRead == 4096) {
+                builder.append(chars);
+            } else {
+                builder.append(chars, 0, numRead);
+            }
+        }
+        return builder.toString();
+    }
 
     public static BufferedReader getFile(String fileName, Configuration conf) throws IOException {
         String realFileName;
         if ((realFileName = isHDFSPath(fileName)) != null) {
             FileSystem fs = FileSystem.get(conf);
-            return new BufferedReader( new InputStreamReader(fs.open( new Path(realFileName))));
+            FSDataInputStream file = fs.open(new Path(realFileName));
+            InputStreamReader reader = new InputStreamReader(file);
+            return new BufferedReader(reader);
         } else if((realFileName = isLocalPath(fileName)) != null) {
             return new BufferedReader(new FileReader(realFileName));
         } else {
@@ -109,6 +126,18 @@ public class FileTools {
         return null;
 
     }
+    
+    public static void writeToOutputFile(String filename, int numMaps, Configuration conf) {
+        try {
+            FileSystem dfs = FileSystem.get(conf);
+            OutputStream output = dfs.create(new Path(filename));
+            for (int i = 0; i < numMaps; i++)
+                output.write((new String(i + "\n").getBytes()));
+            output.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+}
 
 
 }

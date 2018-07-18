@@ -36,7 +36,7 @@ public class Partitioning {
         return size-1;
     }
     
-    private static double computeRatio(double totalDegree, double internalDegree, double expectedRatio) {
+    private static double computeRatio(double totalDegree, double expectedRatio) {
     
         return expectedRatio;
         
@@ -128,19 +128,16 @@ public class Partitioning {
     
         BlockModel.ModelEntry entry = blockModel.getEntries().get(block);
         double blockSize = currentBlockSize[block];
-        double blockTotalDegree = currentBlockInternalDegree[block] + currentBlockExternalDegree[block];
-        double blockRatio = currentBlockRatio[block];
-        double blockInternalDegree = (blockTotalDegree*(1.0-blockRatio));
-        double blockExternalDegree = (blockTotalDegree*blockRatio);
-    
         double expectedRatio = entry.externalDegree / entry.totalDegree;
         blockSize+=size;
-        blockTotalDegree += internalDegree;
-        blockTotalDegree += externalDegree;
-        blockRatio = computeRatio(blockTotalDegree, blockInternalDegree, expectedRatio);
+        double blockTotalDegree = currentBlockInternalDegree[block] +
+                                  currentBlockExternalDegree[block] +
+                                  internalDegree +
+                                  externalDegree;
+        double blockRatio = computeRatio(blockTotalDegree, expectedRatio);
     
-        blockInternalDegree = (blockTotalDegree*(1.0-blockRatio));
-        blockExternalDegree = (blockTotalDegree*(blockRatio));
+        double blockInternalDegree = (blockTotalDegree*(1.0-blockRatio));
+        double blockExternalDegree = (blockTotalDegree*(blockRatio));
     
     
         score += computeScore(totalSize,
@@ -154,10 +151,13 @@ public class Partitioning {
         return score;
     }
     
-
+    
     public static List<Map<Integer,Long>> partition(Random random, BlockModel blockModel,
-                                                      CommunityStreamer streamer,
-                                                      long numNodes) {
+                                                    CommunityStreamer streamer,
+                                                    long targetNumNodes,
+                                                    long threadNumNodes,
+                                                    int  threadId,
+                                                    int  numThreads) {
 
         List<Map<Integer,Long>> superNodesPerBlock = new ArrayList<Map<Integer,Long>>();
         int numBlocks = blockModel.getNumBlocks();
@@ -177,6 +177,8 @@ public class Partitioning {
         Arrays.fill(currentBlockInterBudgetDegree, 0L);
         long currentBlockNumCommunities[] = new long[numBlocks];
         Arrays.fill(currentBlockNumCommunities, 0L);
+        
+        
 
         double partialScores[] = new double[numBlocks];
         Arrays.fill(partialScores,0.0);
@@ -185,12 +187,37 @@ public class Partitioning {
         long totalDegree = 0L;
     
         List<SuperNode> superNodes = new ArrayList<SuperNode>();
-        while( totalNodes < numNodes) {
+        while( totalNodes < threadNumNodes) {
             SuperNode nextSuperNode = streamer.next();
             superNodes.add(nextSuperNode);
             totalNodes+=nextSuperNode.getSize();
             totalDegree+=nextSuperNode.getInternalDegree();
             totalDegree+=nextSuperNode.getExternalDegree();
+        }
+        
+        double factor = targetNumNodes / (double)threadNumNodes;
+        totalDegree *= factor;
+    
+        for(int i = 0; i < numBlocks; ++i) {
+            BlockModel.ModelEntry entry = blockModel.getEntries().get(i);
+            if(entry.size * targetNumNodes < 5000) {
+                if (i % numThreads != threadId) {
+                    currentBlockSize[i] = (long) (entry.size * targetNumNodes);
+                    long currentTotalDegree = (long)(entry.totalDegree * totalDegree);
+                    currentBlockInternalDegree[i] = (long) (currentTotalDegree*(1-entry.externalDegree));
+                    currentBlockExternalDegree[i] = (long) (currentTotalDegree*(entry.externalDegree));
+                }
+            } else {
+                currentBlockSize[i] = (numThreads-1)*(long) (entry.size * targetNumNodes) / numThreads;
+                long currentTotalDegree = (numThreads-1)*(long)(entry.totalDegree * totalDegree) / numThreads;
+                currentBlockInternalDegree[i] = (long) (currentTotalDegree*(1-entry.externalDegree));
+                currentBlockExternalDegree[i] = (long) (currentTotalDegree*(entry.externalDegree));
+            }
+    
+            long blockTotalDegree = currentBlockInternalDegree[i] + currentBlockExternalDegree[i];
+            if(blockTotalDegree > 0) {
+                currentBlockRatio[i] = currentBlockExternalDegree[i] / blockTotalDegree;
+            }
         }
     
         long totalInternalDegree = 0L;
@@ -215,8 +242,10 @@ public class Partitioning {
         long totalObservedDegree = 0L;
         
         for( SuperNode nextSuperNode : superNodes) {
+    
+            int bestBlock = random.nextInt(blockModel.getNumBlocks() / numThreads);
+            bestBlock = threadId + (bestBlock * numThreads);
             
-            int bestBlock = random.nextInt(blockModel.getNumBlocks());
             double currentScore = initializePartialScores(blockModel,
                                      partialScores,
                                      totalNodes,
@@ -244,97 +273,54 @@ public class Partitioning {
                                      bestBlock);
             
             double bestImprovement = currentScore - nextScore;
-            double blockTotalDegree = currentBlockInternalDegree[bestBlock] +
-                                    currentBlockExternalDegree[bestBlock] + nextSuperNode
-                                    .getInternalDegree() + nextSuperNode.getExternalDegree();
-            
-            /*double factor = computeFactor(blockModel.getEntries().get(bestBlock),
-                              blockTotalDegree,
-                              currentBlockInternalDegree[bestBlock] + nextSuperNode.getInternalDegree(),
-                              currentBlockNumCommunities[bestBlock] + 1 );*/
-            
-            double factor = (1.0 - (currentBlockSize[bestBlock] + nextSuperNode.getSize())/(double)(blockModel
-                .getEntries().get(bestBlock).size*totalNodes));
-            factor = 1.0;
-            
-            if(bestImprovement < 0.0) {
-                bestImprovement *= 1.0/factor;
-            } else {
-                bestImprovement *= factor;
-            }
             
             for(int j = 0; j < numBlocks; ++j) {
     
+    
                 BlockModel.ModelEntry entry = blockModel.getEntries().get(j);
-                nextScore = score(blockModel,
-                                  currentScore - partialScores[j],
-                                  totalNodes,
-                                  totalDegree,
-                                  totalInternalDegree,
-                                  totalExternalDegree,
-                                  currentBlockSize,
-                                  currentBlockInternalDegree,
-                                  currentBlockExternalDegree,
-                                  currentBlockRatio,
-                                  nextSuperNode.getSize(),
-                                  nextSuperNode.getInternalDegree(),
-                                  nextSuperNode.getExternalDegree(),
-                                  j);
+    
+                if(entry.id % numThreads == threadId || entry.size*targetNumNodes >= 5000 ) {
+    
+                    nextScore = score(blockModel,
+                                      currentScore - partialScores[j],
+                                      totalNodes,
+                                      totalDegree,
+                                      totalInternalDegree,
+                                      totalExternalDegree,
+                                      currentBlockSize,
+                                      currentBlockInternalDegree,
+                                      currentBlockExternalDegree,
+                                      currentBlockRatio,
+                                      nextSuperNode.getSize(),
+                                      nextSuperNode.getInternalDegree(),
+                                      nextSuperNode.getExternalDegree(),
+                                      j);
     
     
-                double improvement = currentScore - nextScore;
+                    double improvement = currentScore - nextScore;
     
-    
-                blockTotalDegree = currentBlockInternalDegree[j] +
-                    currentBlockExternalDegree[j] + nextSuperNode
-                    .getInternalDegree() + nextSuperNode.getExternalDegree();
-    
-                if(improvement < 0.0) {
-                    improvement *= 1.0/factor;
-                } else {
-                    improvement *= factor;
-                }
-    
-                /*factor = computeFactor(entry,
-                                       blockTotalDegree,
-                                       currentBlockInternalDegree[bestBlock] + nextSuperNode.getInternalDegree(),
-                                       currentBlockNumCommunities[bestBlock] + 1 );*/
-    
-                factor = (1.0 - (currentBlockSize[j] + nextSuperNode.getSize())/(double)(entry
-                    .size*totalNodes));
-                factor = 1.0;
-    
-                if(improvement < 0.0) {
-                    improvement *= (1.0/factor);
-                } else {
-                    improvement *= factor;
-                }
-                
-                /*if(!meetsInterDegree(entry,
-                                     blockTotalDegree,
-                                     currentBlockInternalDegree[j] + nextSuperNode.getInternalDegree(),
-                                     currentBlockNumCommunities[j] + 1 )) {
-                    improvement = -Double.MAX_VALUE;
-        
-                }*/
-    
-    
-                if(improvement > bestImprovement) {
+                    if (improvement > bestImprovement) {
                         bestBlock = j;
                         bestImprovement = improvement;
                     }
+                }
             }
     
-            currentBlockSize[bestBlock]+=nextSuperNode.getSize();
-            currentBlockInternalDegree[bestBlock]+=nextSuperNode.getInternalDegree();
-            currentBlockExternalDegree[bestBlock]+=nextSuperNode.getExternalDegree();
-            long totalBlockDegree = currentBlockInternalDegree[bestBlock] + currentBlockExternalDegree[bestBlock];
             BlockModel.ModelEntry entry = blockModel.getEntries().get(bestBlock);
             double expectedRatio = entry.externalDegree / entry.totalDegree;
+            currentBlockSize[bestBlock]+=nextSuperNode.getSize();
+            long currentBlockDegree =   currentBlockInternalDegree[bestBlock] +
+                                        currentBlockExternalDegree[bestBlock] +
+                                        nextSuperNode.getInternalDegree()+
+                                        nextSuperNode.getExternalDegree();
     
-            currentBlockRatio[bestBlock] = computeRatio((long)totalBlockDegree,
-                                                        currentBlockInternalDegree[bestBlock],
+            currentBlockRatio[bestBlock] = computeRatio((long)currentBlockDegree,
                                                         expectedRatio);
+            
+            currentBlockInternalDegree[bestBlock] = (long)(currentBlockDegree*(1-currentBlockRatio[bestBlock]));
+            currentBlockExternalDegree[bestBlock] = currentBlockDegree -
+                                                    currentBlockInternalDegree[bestBlock];
+    
     
             currentBlockInterBudgetDegree[bestBlock] = Math.abs(currentBlockInterBudgetDegree[bestBlock] -
                                                                     nextSuperNode.getExternalDegree());
@@ -350,7 +336,7 @@ public class Partitioning {
 
             if( count % 1000 == 0) {
                 System.out.println("Distributed "+count+" superNodes amounting "+totalObservedNodes+" out of " +
-                        numNodes);
+                        threadNumNodes);
             }
             count++;
         }
@@ -405,8 +391,7 @@ public class Partitioning {
             for(BlockModel.ModelEntry entry : blockModel.getEntries().values()) {
                 long expectedInternalDegree = (long)((entry.totalDegree - entry.externalDegree)*totalDegree);
                 totalExpectedInternalDegree += expectedInternalDegree;
-                long observedInternalDegree = (long)((currentBlockInternalDegree[(int)entry.id] +
-                    currentBlockExternalDegree[(int)(entry.id)]) * (1-currentBlockRatio[(int)entry.id]));
+                long observedInternalDegree = (long)(currentBlockInternalDegree[(int)entry.id]);
                 totalObservedInternalDegree += observedInternalDegree;
                 
                 internalDegreeScore += Math.pow((expectedInternalDegree - observedInternalDegree) ,2);
@@ -420,8 +405,7 @@ public class Partitioning {
             for(BlockModel.ModelEntry entry : blockModel.getEntries().values()) {
                 long expectedExternalDegree = (long)(entry.externalDegree*totalDegree);
                 totalExpectedExternalDegree += expectedExternalDegree;
-                long observedExternalDegree = (long)((currentBlockInternalDegree[(int)entry.id] +
-                    currentBlockExternalDegree[(int)(entry.id)]) * (currentBlockRatio[(int)entry.id]));
+                long observedExternalDegree = (long)(currentBlockExternalDegree[(int)entry.id]);
                 
                 totalObservedExternalDegree += observedExternalDegree;
                 
