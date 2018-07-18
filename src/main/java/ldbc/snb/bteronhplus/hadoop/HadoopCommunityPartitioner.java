@@ -79,7 +79,7 @@ public class HadoopCommunityPartitioner {
             int threadId = Integer.parseInt(value.toString());
             Configuration conf = context.getConfiguration();
             
-            int numThreads = conf.getInt("numThreads", 1);
+            int numThreads = conf.getInt("numThreads",1);
             long numNodes = conf.getLong("numNodes",10000L);
             String blockModelFile = conf.get("blockModelFilePrefix");
             String communitiesFileName = conf.get("communitiesFile");
@@ -97,6 +97,7 @@ public class HadoopCommunityPartitioner {
             long nodesToGenerate = numNodes / numThreads;
     
     
+            context.setStatus("Partitioning communities");
             List<Map<Integer,Long>> partition = Partitioning.partition(random,
                                                                        blockModel,
                                                                        communityStreamer,
@@ -114,7 +115,7 @@ public class HadoopCommunityPartitioner {
                 }
             }
             
-            System.out.println("Mapper "+threadId+" finished execution");
+            context.setStatus("Mapper "+threadId+" finished execution");
             
         }
     }
@@ -146,13 +147,13 @@ public class HadoopCommunityPartitioner {
         
         FileSystem dfs = FileSystem.get(conf);
         String triggerFile = "trigger.dat";
+        int numThreads = Integer.parseInt(conf.get("numThreads"));
         FileTools.writeToOutputFile(triggerFile,
-                                    Integer.parseInt(conf.get("numThreads")),
+                                    numThreads,
                                     conf);
         
         String partitionOutputFile = conf.get("partitionFile");
 
-        int numThreads = Integer.parseInt(conf.get("numThreads"));
         conf.setInt("mapreduce.input.lineinputformat.linespermap", 1);
         Job job = Job.getInstance(conf, "Partitioning Communities");
         job.setMapOutputKeyClass(LongWritable.class);

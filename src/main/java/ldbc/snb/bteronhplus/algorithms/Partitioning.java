@@ -213,6 +213,11 @@ public class Partitioning {
                 currentBlockInternalDegree[i] = (long) (currentTotalDegree*(1-entry.externalDegree));
                 currentBlockExternalDegree[i] = (long) (currentTotalDegree*(entry.externalDegree));
             }
+    
+            long blockTotalDegree = currentBlockInternalDegree[i] + currentBlockExternalDegree[i];
+            if(blockTotalDegree > 0) {
+                currentBlockRatio[i] = currentBlockExternalDegree[i] / blockTotalDegree;
+            }
         }
     
         long totalInternalDegree = 0L;

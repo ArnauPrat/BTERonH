@@ -56,11 +56,19 @@ public class MainHadoop {
         conf.set("communitiesFile", arguments.communitiesFile);
         conf.setInt("numNodes", arguments.graphSize);
         conf.set("outputFile", arguments.outputFileName);
+        System.out.println("Partitioning Graph");
+        long start = System.currentTimeMillis();
         HadoopCommunityPartitioner communityPartitioner = new HadoopCommunityPartitioner();
         communityPartitioner.run(conf);
-        
+        long end = System.currentTimeMillis();
+        System.out.println("Graph Partitioned in "+(start - end)+" ms");
+    
+        System.out.println("Sampling Edges");
+        start = System.currentTimeMillis();
         HadoopEdgeSampler edgeSampler = new HadoopEdgeSampler();
         edgeSampler.run(conf);
+        end = System.currentTimeMillis();
+        System.out.println("Edges sampled in "+(start - end)+" ms");
         
     }
 }

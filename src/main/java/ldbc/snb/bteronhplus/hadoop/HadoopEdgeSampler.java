@@ -74,7 +74,6 @@ public class HadoopEdgeSampler {
             Configuration conf = context.getConfiguration();
             
             int numThreads = conf.getInt("numThreads", 1);
-            long numNodes = conf.getLong("numNodes",10000L);
             String blockModelFile = conf.get("blockModelFilePrefix");
             String communitiesFileName = conf.get("communitiesFile");
     
@@ -105,7 +104,7 @@ public class HadoopEdgeSampler {
     
                 while (reader.next(blockId, modelCount)) {
                     Map<Integer, Long> count = partition.get((int) blockId.get());
-                    count.put(modelCount.modelId, modelCount.count);
+                    count.merge(modelCount.modelId, modelCount.count, Long::sum);
                 }
             }
             
