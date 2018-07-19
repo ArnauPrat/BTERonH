@@ -1,15 +1,8 @@
 package ldbc.snb.bteronhplus.algorithms;
 
 import ldbc.snb.bteronhplus.structures.*;
-import org.jgrapht.Graph;
-import org.jgrapht.alg.ConnectivityInspector;
-import org.jgrapht.graph.DefaultEdge;
-import org.jgrapht.graph.SimpleGraph;
-import org.jgrapht.graph.builder.GraphBuilder;
 
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.util.*;
 
 public class Generator {
@@ -80,7 +73,6 @@ public class Generator {
             for(Map.Entry<Integer,Double> neighbor : entry.degree.entrySet()) {
                 sumDensities += neighbor.getValue();
                 BlockSampler sampler = blockSamplers.get(entry.id);
-                GraphBuilder builder = SimpleGraph.createBuilder(DefaultEdge.class);
             
                 double expectedDegree = entry.totalDegree * totalDegree;
                 if(entry.id == neighbor.getKey() && entry.id % numThreads == threadId) {
@@ -99,14 +91,13 @@ public class Generator {
                     sampler.generateCommunityEdges(writer,
                                                    partition.get(entry.id),
                                                    communityStreamer,
-                                                   offsets[entry.id],
-                                                   builder);
+                                                   offsets[entry.id]);
                 
                     long darwiniEdges = sampler.darwini(writer,random,offsets[entry.id]);
                     totalExternalGeneratedEdges+=darwiniEdges;
                     numEdges-=darwiniEdges;
                 
-                    sampler.generateConnectedGraph(writer, random, offsets[entry.id], builder);
+                    sampler.generateConnectedGraph(writer, random, offsets[entry.id]);
                 
                     numEdges -= sampler.getNumCommunities() - 1;
                 
@@ -117,19 +108,9 @@ public class Generator {
                         if (node1 != -1 && node2 != -1) {
                             writer.write(node1, node2);
                             totalExternalGeneratedEdges++;
-                        
-                            if(node1 != node2) {
-                                builder.addEdge(node1, node2);
-                            }
                         }
                     }
                 
-                    Graph<Long, DefaultEdge> graph = builder.build();
-                    ConnectivityInspector<Long, DefaultEdge> connectivityInspector = new ConnectivityInspector<>(graph);
-                    List<Set<Long>> connectedComponents = connectivityInspector.connectedSets();
-                    if (connectedComponents.size() > 1) {
-                        totalBrokenBlocks++;
-                    }
                 }
             }
         }

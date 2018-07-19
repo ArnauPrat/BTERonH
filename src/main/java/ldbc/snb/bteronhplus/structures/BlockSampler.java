@@ -1,11 +1,8 @@
 package ldbc.snb.bteronhplus.structures;
 
 import org.apache.commons.math3.util.Pair;
-import org.jgrapht.graph.builder.GraphBuilder;
 
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.util.*;
 
 public class BlockSampler {
@@ -85,7 +82,7 @@ public class BlockSampler {
     
     }
     
-    public void generateConnectedGraph(EdgeWriter writer, Random random, long baseOffset, GraphBuilder builder)
+    public void generateConnectedGraph(EdgeWriter writer, Random random, long baseOffset)
         throws
         IOException {
         
@@ -125,8 +122,6 @@ public class BlockSampler {
                     long node2 = nextModel.sampleNode(random, models.get(i).getSecond());
         
                     writer.write(node1, node2);
-                    if(node1 != node2)
-                        builder.addEdge(node1, node2);
                 }
             }
         }
@@ -137,8 +132,7 @@ public class BlockSampler {
     public void generateCommunityEdges(EdgeWriter writer,
                                        Map<Integer, Long> counts,
                                        CommunityStreamer communityStreamer,
-                                       long offset,
-                                       GraphBuilder builder) throws IOException {
+                                       long offset) throws IOException {
         
         for(Map.Entry<Integer,Long> entry : counts.entrySet()) {
             Community model = communityStreamer.getModel(entry.getKey());
@@ -148,7 +142,6 @@ public class BlockSampler {
                     long tail = (currentOffset + edge.getTail());
                     long head = (currentOffset + edge.getHead());
                     writer.write(tail, head);
-                    builder.addEdge(tail,head);
                 }
                 currentOffset += model.getSize();
             }
