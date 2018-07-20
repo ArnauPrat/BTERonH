@@ -108,7 +108,7 @@ public class Generator {
                         if (node1 != -1 && node2 != -1) {
     
                             if(node1 < 0 || node2 < 0) {
-                                throw new RuntimeException("INVALID NODE ID");
+                                throw new RuntimeException("INVALID NODE ID: "+node1+" "+node2);
                             }
                             writer.write(node1, node2);
                             totalExternalGeneratedEdges++;
@@ -139,7 +139,7 @@ public class Generator {
                         totalExpectedGeneratedEdges++;
                         if (node1 != -1 && node2 != -1) {
                             if(node1 < 0 || node2 < 0) {
-                                throw new RuntimeException("INVALID NODE ID");
+                                throw new RuntimeException("INVALID NODE ID: "+node1+" "+node2);
                             }
                             writer.write(node1,node2);
                             totalExternalGeneratedEdges++;
