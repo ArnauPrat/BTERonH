@@ -137,23 +137,29 @@ public class HadoopEdgeSampler {
                                                                           LongWritable,
                                                                           LongWritable,
                                                                           LongWritable> {
-
+        static Set<Long> endpoints;
+        @Override
+        protected void setup(Context context) throws IOException, InterruptedException {
+            super.setup(context);
+            endpoints = new HashSet<Long>();
+        }
+    
         @Override
         public void reduce(LongWritable tail,
                            Iterable<LongWritable> valueSet,
                            Context context) throws IOException, InterruptedException {
             
-            Set<Long> edges = new HashSet<Long>();
             for(LongWritable neighbor : valueSet) {
-                edges.add(new Long(neighbor.get()));
+                endpoints.add(new Long(neighbor.get()));
             }
             
-            edges.remove(tail.get());
+            endpoints.remove(tail.get());
             
-            for(Long neighbor : edges) {
+            for(Long neighbor : endpoints) {
                 context.write(new LongWritable(tail.get()),
                               new LongWritable(neighbor));
             }
+            endpoints.clear();
         }
     }
     
