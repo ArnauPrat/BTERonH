@@ -73,7 +73,7 @@ public class BlockSampler {
     
             Community model = streamer.getModel(modelId[pos]);
             long modelOffset = offsets.get(modelId[pos]);
-            long instanceIndex = random.nextLong() % numModels[pos];
+            long instanceIndex = Math.abs(random.nextLong()) % numModels[pos];
             modelOffset += model.getSize() * instanceIndex;
             long finalOffset = offset + modelOffset;
             return model.sampleNode(random, finalOffset);
