@@ -106,6 +106,10 @@ public class Generator {
                         long node2 = sampler.sample(random, offsets[entry.id]);
                         totalExpectedGeneratedEdges++;
                         if (node1 != -1 && node2 != -1) {
+    
+                            if(node1 < 0 || node2 < 0) {
+                                throw new RuntimeException("INVALID NODE ID");
+                            }
                             writer.write(node1, node2);
                             totalExternalGeneratedEdges++;
                         }
@@ -134,6 +138,9 @@ public class Generator {
                         long node2 = sampler2.sample(random, offsets[neighbor.getKey()]);
                         totalExpectedGeneratedEdges++;
                         if (node1 != -1 && node2 != -1) {
+                            if(node1 < 0 || node2 < 0) {
+                                throw new RuntimeException("INVALID NODE ID");
+                            }
                             writer.write(node1,node2);
                             totalExternalGeneratedEdges++;
                         }
