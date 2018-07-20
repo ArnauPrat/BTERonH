@@ -52,7 +52,11 @@ public class HadoopEdgeSampler {
             @Override
             public void write(long tail, long head) throws IOException {
                 try {
-                    context.write(new LongWritable(tail), new LongWritable(head));
+                    if(tail < head) {
+                        context.write(new LongWritable(tail), new LongWritable(head));
+                    } else {
+                        context.write(new LongWritable(head), new LongWritable(tail));
+                    }
                 } catch (InterruptedException e) {
                     throw new IOException(e.getMessage());
                 }
