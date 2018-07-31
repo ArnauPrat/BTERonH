@@ -64,10 +64,11 @@ public class Main {
         System.out.println("Density file: "+arguments.densityFileName);
         System.out.println("Modules prefix: "+arguments.modulesPrefix);
 
-        GraphStats graphStats = new GraphStats(arguments.degreesFile,
+        /*GraphStats graphStats = new GraphStats(arguments.degreesFile,
                                                arguments.ccsFile,
                                                arguments.communitiesfile,
                                                arguments.densityFileName);
+                                               */
 
 
         byte[] byteArray = Files.readAllBytes(Paths.get(arguments.communityStructureFileNamePrefix+1));
