@@ -139,6 +139,9 @@ public class Partitioning {
             totalNodes+=nextSuperNode.getSize();
             totalDegree+=nextSuperNode.getInternalDegree();
             totalDegree+=nextSuperNode.getExternalDegree();
+    
+            System.out.println("Distributed "+totalNodes+" out of " +
+                                   threadNumNodes);
         }
         
         double factor = targetNumNodes / (double)threadNumNodes;
@@ -250,10 +253,6 @@ public class Partitioning {
             totalObservedNodes+=nextSuperNode.getSize();
             
 
-            if( count % 1000 == 0) {
-                System.out.println("Distributed "+count+" superNodes amounting "+totalObservedNodes+" out of " +
-                        threadNumNodes);
-            }
             count++;
         }
         
