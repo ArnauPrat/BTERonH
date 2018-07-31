@@ -102,6 +102,8 @@ public class Main {
                               0,
                               1);
         writer.close();
+    
+        Partitioning.printStats(blockModel, partition, communityStreamer);
         
         
     }
