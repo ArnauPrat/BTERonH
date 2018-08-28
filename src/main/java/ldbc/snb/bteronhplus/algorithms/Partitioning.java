@@ -178,6 +178,7 @@ public class Partitioning {
     
         long totalObservedNodes = 0L;
         long totalObservedDegree = 0L;
+        long totalObservedInternalDegree = 0L;
         
         for( SuperNode nextSuperNode : superNodes) {
     
@@ -250,6 +251,7 @@ public class Partitioning {
     
             superNodesPerBlock.get(bestBlock).merge(nextSuperNode.getId(), 1L, Long::sum);
     
+            totalObservedInternalDegree+=nextSuperNode.getInternalDegree();
             totalObservedDegree+=nextSuperNode.getInternalDegree()+nextSuperNode.getExternalDegree();
             totalObservedNodes+=nextSuperNode.getSize();
             
@@ -264,6 +266,7 @@ public class Partitioning {
         }
         
         System.out.println("Number of nodes observed "+totalObservedNodes);
+        System.out.println("Number of internal degree observed "+totalObservedInternalDegree);
         System.out.println("Number of degree observed "+totalObservedDegree);
         System.out.println("Number of super nodes consumed "+count);
         return superNodesPerBlock;
