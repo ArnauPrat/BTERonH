@@ -260,9 +260,9 @@ public class Partitioning {
             }
 
             count++;
-            if(totalObservedNodes > threadNumNodes) {
+            /*if(totalObservedNodes > threadNumNodes) {
                 break;
-            }
+            }*/
         }
         
         System.out.println("Number of nodes observed "+totalObservedNodes);
