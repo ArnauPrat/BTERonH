@@ -1,9 +1,8 @@
-package ldbc.snb.bteronhplus.structures;
+/*package ldbc.snb.bteronhplus.structures;
 
 
 import java.util.*;
 
-/*
 
 public class CorePeripheryCommunityStreamer implements CommunityStreamer {
 
@@ -12,7 +11,6 @@ public class CorePeripheryCommunityStreamer implements CommunityStreamer {
     private Map<Integer, List<CommunityModel>>  communityModels = null;
     private List<Community>                     communities = null;
     private GraphStats                          graphStats = null;
-    private Random                              random = null;
     private int                                 nextCommunityId = 0;
     
     private static class NodeInfo {
@@ -75,13 +73,14 @@ public class CorePeripheryCommunityStreamer implements CommunityStreamer {
                 degree.merge((int)edge.getHead(), 1 , Integer::sum);
             }
             
-            int excessDegree[] = new int[numNodes];
+            ArrayList<Integer> excessDegree = new ArrayList<Integer>();
+            excessDegree.ensureCapacity(numNodes);
             for(Map.Entry<Integer,Integer> entry : degree.entrySet()) {
-                excessDegree[entry.getKey()] = (int) Math.max(0.0, nodeInfo.get(entry.getKey()).degree - entry
-                    .getValue());
+                excessDegree.set(entry.getKey(),
+                                 (int) Math.max(0.0, nodeInfo.get(entry.getKey()).degree - entry.getValue()));
             }
             
-            return new Community(id, nodeInfo.size(), edges, excessDegree);
+            return new Community(id, new ArrayList<Integer>(excessDegree), new ArrayList<Double>(), edges);
         }
         
     }
@@ -362,13 +361,13 @@ public class CorePeripheryCommunityStreamer implements CommunityStreamer {
         
     }
 
-    public CorePeripheryCommunityStreamer(GraphStats graphStats, Random random) {
-        this.random = random;
+    public CorePeripheryCommunityStreamer(GraphStats graphStats) {
         communityModels = new HashMap<Integer, List<CommunityModel>>();
         communities = new ArrayList<Community>();
         this.graphStats = graphStats;
         this.nextCommunityId = 0;
 
+        Random random = new Random();
         for(Integer size : graphStats.getCommunitySizes()) {
             System.out.println("Generating models for size: "+size);
     
@@ -386,23 +385,24 @@ public class CorePeripheryCommunityStreamer implements CommunityStreamer {
                                                        degree,
                                                        clusteringCoefficient);
             communityModels.put(size, models);
+            for(int i = 0; i < 1000; ++i) {
+                CommunityModel model = communityModels.get(size).get(random.nextInt(NUM_MODELS_PER_SIZE));
+                communities.add(model.generate(nextCommunityId));
+                nextCommunityId++;
+            }
         }
+        Collections.shuffle(communities);
     }
     
     
     @Override
     public Community getModel(int id) {
-        return null;
+        return communities.get(id);
     }
     
     @Override
-    public Community next() {
-        int nextCommunitySize = (int) graphStats.getCommunitySizeDistribution().getNext();
-        CommunityModel model = null;
-        model = communityModels.get(nextCommunitySize).get(random.nextInt(NUM_MODELS_PER_SIZE));
-        Community community = model.generate(nextCommunityId);
-        nextCommunityId+=1;
-        return community;
+    public Community next(Random random) {
+        return communities.get(random.nextInt(communities.size()));
     }
 }
 */

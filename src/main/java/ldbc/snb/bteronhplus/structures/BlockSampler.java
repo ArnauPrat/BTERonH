@@ -135,8 +135,12 @@ public class BlockSampler {
                                        long offset) throws IOException {
         
         for(Map.Entry<Integer,Long> entry : counts.entrySet()) {
-            Community model = communityStreamer.getModel(entry.getKey());
-            long currentOffset = offset + offsets.get(entry.getKey());
+            int communityId = entry.getKey();
+            Community model = communityStreamer.getModel(communityId);
+            if(offsets.get(communityId) == null) {
+                System.out.println("ERROR");
+            }
+            long currentOffset = offset + offsets.get(communityId);
             for(int i = 0; i < entry.getValue(); ++i) {
                 for(Edge edge : model.getEdges()) {
                     long tail = (currentOffset + edge.getTail());

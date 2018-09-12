@@ -18,13 +18,11 @@ public class RealCommunityStreamer implements CommunityStreamer {
         long totalExcessDegree = 0;
         long totalObservedNodes = 0;
         try {
-    
             int counter = 0;
             ArrayList<Double> communitySizes = new ArrayList<Double>();
             BufferedReader reader = FileTools.getFile(communitiesFile, conf);
             String line = reader.readLine();
             while (line != null) {
-    
                 HashMap<Integer, Integer> idMap = new HashMap<Integer, Integer>();
                 ArrayList<Integer> graphDegrees = new ArrayList<Integer>();
                 ArrayList<Double>  clusteringCoefficient = new ArrayList<Double>();
@@ -32,53 +30,52 @@ public class RealCommunityStreamer implements CommunityStreamer {
                 ArrayList<Edge> edges = new ArrayList<Edge>();
                 String[] community = line.split("\\|");
                 String[] nodesstr = community[0].split(" ");
-                /*if(nodesstr.length > 2)*/ {
-                    for (int i = 0; i < nodesstr.length; ++i) {
-                        String nodeInfo[] = nodesstr[i].split(":");
-                        idMap.put(Integer.parseInt(nodeInfo[0]), i);
-                        graphDegrees.add(Integer.parseInt(nodeInfo[1]));
-                        clusteringCoefficient.add(Double.parseDouble(nodeInfo[2]));
-                        excessDegree.add(0);
+                for (int i = 0; i < nodesstr.length; ++i) {
+                    String nodeInfo[] = nodesstr[i].split(":");
+                    idMap.put(Integer.parseInt(nodeInfo[0]), i);
+                    graphDegrees.add(Integer.parseInt(nodeInfo[1]));
+                    clusteringCoefficient.add(Double.parseDouble(nodeInfo[2]));
+                    excessDegree.add(0);
+                }
+                if (community.length == 2) {
+                    
+                    String[]              edgesstr = community[1].split(" ");
+                    Map<Integer, Integer> degree   = new HashMap<Integer, Integer>();
+                    for (int i = 0; i < graphDegrees.size(); ++i) {
+                        degree.put(i, 0);
                     }
-    
-    
-                    if (community.length == 2) {
-        
-                        String[]              edgesstr = community[1].split(" ");
-                        Map<Integer, Integer> degree   = new HashMap<Integer, Integer>();
-                        for (int i = 0; i < graphDegrees.size(); ++i) {
-                            degree.put(i, 0);
-                        }
-        
-                        for (int i = 0; i < edgesstr.length; ++i) {
-                            String[] endpoints = edgesstr[i].split(":");
-                            int      tail      = Integer.parseInt(endpoints[0]);
-                            int      head      = Integer.parseInt(endpoints[1]);
-                            tail = idMap.get(tail);
-                            head = idMap.get(head);
-                            Edge edge = new Edge(tail, head);
-                            edges.add(edge);
-                            degree.merge((int) edge.getTail(), 1, Integer::sum);
-                            degree.merge((int) edge.getHead(), 1, Integer::sum);
-                            totalObservedEdges++;
-                        }
-        
-                        for (int i = 0; i < graphDegrees.size(); ++i) {
-                            Integer localDegree   = graphDegrees.get(i);
-                            Integer currentDegree = degree.get(i);
-                            excessDegree.set(i, localDegree - currentDegree);
-                            if (excessDegree.get(i) < 0) {
-                                throw new RuntimeException("Node with excess degree < 0");
-                            }
-            
-                            totalExcessDegree += excessDegree.get(i);
-                        }
-    
-                        models.add(new Community(counter, excessDegree, clusteringCoefficient, edges));
-                        communitySizes.add((double) excessDegree.size());
-                        totalObservedNodes += excessDegree.size();
-                        counter++;
+                    
+                    for (int i = 0; i < edgesstr.length; ++i) {
+                        String[] endpoints = edgesstr[i].split(":");
+                        int      tail      = Integer.parseInt(endpoints[0]);
+                        int      head      = Integer.parseInt(endpoints[1]);
+                        tail = idMap.get(tail);
+                        head = idMap.get(head);
+                        Edge edge = new Edge(tail, head);
+                        edges.add(edge);
+                        degree.merge((int) edge.getTail(), 1, Integer::sum);
+                        degree.merge((int) edge.getHead(), 1, Integer::sum);
+                        totalObservedEdges++;
                     }
+                    
+                    for (int i = 0; i < graphDegrees.size(); ++i) {
+                        Integer localDegree   = graphDegrees.get(i);
+                        Integer currentDegree = degree.get(i);
+                        excessDegree.set(i, localDegree - currentDegree);
+                        if (excessDegree.get(i) < 0) {
+                            throw new RuntimeException("Node with excess degree < 0");
+                        }
+                        
+                        totalExcessDegree += excessDegree.get(i);
+                    }
+                    
+                    models.add(new Community(counter,
+                                             excessDegree,
+                                             clusteringCoefficient,
+                                             edges));
+                    communitySizes.add((double) excessDegree.size());
+                    totalObservedNodes += excessDegree.size();
+                    counter++;
                 }
                 line = reader.readLine();
             }

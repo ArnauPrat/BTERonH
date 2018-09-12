@@ -80,10 +80,15 @@ public class Main {
         Random random = new Random();
         random.setSeed(12345L);
 
-        //BasicCommunityStreamer communityStreamer = new BasicCommunityStreamer(graphStats);
         //CorePeripheryCommunityStreamer communityStreamer = new CorePeripheryCommunityStreamer(graphStats,random);
-        RealCommunityStreamer communityStreamer = new RealCommunityStreamer(arguments.modulesPrefix+
+        /*RealCommunityStreamer communityStreamer = new RealCommunityStreamer(arguments.modulesPrefix+
                                                         "communities");
+                                                        */
+        
+        
+        BasicCommunityStreamer communityStreamer = new BasicCommunityStreamer(arguments.modulesPrefix+
+                                                        "communities");
+                                                        
         List<Map<Integer,Long>> partition = Partitioning.partition(random, blockModel,
                                                                    communityStreamer,
                                                                    arguments.graphSize,
