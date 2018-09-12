@@ -76,9 +76,14 @@ public class BasicCommunityStreamer implements CommunityStreamer {
                         stubs[j].degreeUsed++;
                         edges.add(edge);
                     }
+                    
+                    if(stubs[i].degreeLeft == 0) {
+                        break;
+                    }
                 }
             }
             
+            /*
             GraphBuilder builder = SimpleGraph.createBuilder(DefaultEdge.class);
             for(Edge edge : edges) {
                 builder.addEdge(edge.getTail(), edge.getHead());
@@ -86,7 +91,9 @@ public class BasicCommunityStreamer implements CommunityStreamer {
             Graph<Long,DefaultEdge> graph = builder.build();
             ConnectivityInspector<Long,DefaultEdge> connectivityInspector = new ConnectivityInspector<>(graph);
             List<Set<Long>> connectedComponents = connectivityInspector.connectedSets();
-            while(connectedComponents.size() > 1 ) {
+            boolean finish = false;
+            while(connectedComponents.size() > 1 && !finish) {
+                finish = true;
                 
                 connectedComponents.sort(new Comparator<Set<Long>>() {
                     @Override
@@ -109,23 +116,12 @@ public class BasicCommunityStreamer implements CommunityStreamer {
                 Set<DefaultEdge> candidateEdges2 = new HashSet<DefaultEdge>(second.edgeSet());
                 candidateEdges2.removeAll(spanningTree2.getEdges());
                 
-                if(candidateEdges1.size() == 0 && candidateEdges2.size() == 0) {
-                    return null;
-                }
+                //if(candidateEdges1.size() == 0 && candidateEdges2.size() == 0) {
+                //    return null;
+                //}
                 
-                ArrayList<DefaultEdge> edgesArray1 = null;
-                if(candidateEdges1.size() > 0) {
-                    edgesArray1 = new ArrayList<DefaultEdge>(candidateEdges1);
-                } else {
-                    edgesArray1 = new ArrayList<DefaultEdge>(spanningTree1.getEdges());
-                }
-                ArrayList<DefaultEdge> edgesArray2 = null;
-                
-                if(candidateEdges2.size() > 0) {
-                    edgesArray2 = new ArrayList<DefaultEdge>(candidateEdges2);
-                } else {
-                    edgesArray2 = new ArrayList<>(spanningTree2.getEdges());
-                }
+                ArrayList<DefaultEdge> edgesArray1 = new ArrayList<DefaultEdge>(candidateEdges1);
+                ArrayList<DefaultEdge> edgesArray2 = new ArrayList<DefaultEdge>(candidateEdges2);
                 
                 Collections.shuffle(edgesArray1);
                 Collections.shuffle(edgesArray2);
@@ -149,6 +145,7 @@ public class BasicCommunityStreamer implements CommunityStreamer {
                     graph.addEdge(source1, source2);
                     graph.addEdge(target1, target2);
                     
+                    finish = false;
                 }
                 
                 connectivityInspector = new ConnectivityInspector<>(graph);
@@ -188,19 +185,6 @@ public class BasicCommunityStreamer implements CommunityStreamer {
                 }
             }
             
-            /*spanningTreeAlgorithm = new BoruvkaMinimumSpanningTree(graph);
-            spanningTree = spanningTreeAlgorithm.getSpanningTree();
-            candidateEdges = new HashSet<DefaultEdge>(graph.edgeSet());
-            candidateEdges.removeAll(spanningTree.getEdges());
-            ArrayList<DefaultEdge> toRemove = new ArrayList<DefaultEdge>(candidateEdges);
-            Collections.shuffle(toRemove);
-            int edgesToRemove = Math.max(graph.edgeSet().size(),1);
-            while(!toRemove.isEmpty() && edgesToRemove > 0) {
-                graph.removeEdge(toRemove.get(toRemove.size()-1));
-                toRemove.remove(toRemove.size()-1);
-                edgesToRemove--;
-            }*/
-            
             stubs = new Stub[degrees.size()];
             
             for (int i = 0; i < degrees.size(); ++i) {
@@ -224,6 +208,7 @@ public class BasicCommunityStreamer implements CommunityStreamer {
                 stubs[(int)(long)target].degreeUsed++;
                 edges.add(new Edge(source,target));
             }
+            */
             
             
             ArrayList<Integer> finalExcessDegree = new ArrayList<Integer>();
@@ -266,6 +251,8 @@ public class BasicCommunityStreamer implements CommunityStreamer {
                     clusteringCoefficient.add(Double.parseDouble(nodeInfo[2]));
                     excessDegree.add(0);
                 }
+    
+                //System.out.println("ENTRA: "+nextCommunityId+" "+graphDegrees.size());
                 
                 /*if (community.length == 2)*/ {
                     
@@ -311,7 +298,6 @@ public class BasicCommunityStreamer implements CommunityStreamer {
                         }
                         count++;
                     } while (generatedCommunity == null && count < 100);
-                    
                 }
                 
                 line = reader.readLine();

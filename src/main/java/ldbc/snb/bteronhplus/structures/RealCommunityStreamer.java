@@ -2,6 +2,12 @@ package ldbc.snb.bteronhplus.structures;
 
 import ldbc.snb.bteronhplus.tools.FileTools;
 import org.apache.hadoop.conf.Configuration;
+import org.jgrapht.Graph;
+import org.jgrapht.alg.interfaces.SpanningTreeAlgorithm;
+import org.jgrapht.alg.spanning.BoruvkaMinimumSpanningTree;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.SimpleGraph;
+import org.jgrapht.graph.builder.GraphBuilder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -44,7 +50,7 @@ public class RealCommunityStreamer implements CommunityStreamer {
                     for (int i = 0; i < graphDegrees.size(); ++i) {
                         degree.put(i, 0);
                     }
-                    
+    
                     for (int i = 0; i < edgesstr.length; ++i) {
                         String[] endpoints = edgesstr[i].split(":");
                         int      tail      = Integer.parseInt(endpoints[0]);
@@ -53,6 +59,9 @@ public class RealCommunityStreamer implements CommunityStreamer {
                         head = idMap.get(head);
                         Edge edge = new Edge(tail, head);
                         edges.add(edge);
+                    }
+    
+                    for (Edge edge : edges) {
                         degree.merge((int) edge.getTail(), 1, Integer::sum);
                         degree.merge((int) edge.getHead(), 1, Integer::sum);
                         totalObservedEdges++;
