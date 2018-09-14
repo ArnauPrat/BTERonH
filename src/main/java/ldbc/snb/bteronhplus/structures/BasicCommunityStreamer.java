@@ -57,33 +57,48 @@ public class BasicCommunityStreamer implements CommunityStreamer {
                 stubs[i].totalDegree = stubs[i].degreeLeft;
             }
             
-            Arrays.sort(stubs, new Comparator<Stub>() {
-                @Override
-                public int compare(Stub pair1, Stub pair2) {
-                    return pair2.degreeLeft - pair1.degreeLeft;
-                }
-            });
-            
             List<Edge> edges = new ArrayList<Edge>();
             
+            boolean consumed [] = new boolean[stubs.length];
+            Arrays.fill(consumed, false);
             for(int i = 0; i < stubs.length; ++i) {
-                for(int j = i+1; j < stubs.length; ++j) {
-                    if(stubs[i].degreeLeft > 0 && stubs[j].degreeLeft > 0) {
-                        Edge edge = new Edge(stubs[i].id, stubs[j].id);
-                        stubs[i].degreeLeft--;
-                        stubs[i].degreeUsed++;
-                        stubs[j].degreeLeft--;
-                        stubs[j].degreeUsed++;
-                        edges.add(edge);
+    
+                Arrays.sort(stubs, new Comparator<Stub>() {
+                    @Override
+                    public int compare(Stub pair1, Stub pair2) {
+                        return pair2.degreeLeft - pair1.degreeLeft;
                     }
-                    
-                    if(stubs[i].degreeLeft == 0) {
-                        break;
+                });
+                
+                // Look for the first stub not already consumed
+                int next = stubs.length - 1;
+                Stub first = stubs[next];
+                while(next > 0 && consumed[first.id]) {
+                    next--;
+                    first = stubs[next];
+                }
+                
+                if(!consumed[first.id]) {
+                    // Add the stub to consumed list and connect to neighbors
+                    consumed[first.id] = true;
+                    for (int j = 0; j < next; ++j) {
+                        if (first.degreeLeft > 0 && stubs[j].degreeLeft > 0 && !consumed[stubs[j].id]) {
+                            Edge edge = new Edge(first.id, stubs[j].id);
+                            first.degreeLeft--;
+                            first.degreeUsed++;
+                            stubs[j].degreeLeft--;
+                            stubs[j].degreeUsed++;
+                            edges.add(edge);
+                        }
+        
+                        if (first.degreeLeft == 0) {
+                            break;
+                        }
                     }
                 }
             }
             
-            /*
+            
             GraphBuilder builder = SimpleGraph.createBuilder(DefaultEdge.class);
             for(Edge edge : edges) {
                 builder.addEdge(edge.getTail(), edge.getHead());
@@ -92,7 +107,7 @@ public class BasicCommunityStreamer implements CommunityStreamer {
             ConnectivityInspector<Long,DefaultEdge> connectivityInspector = new ConnectivityInspector<>(graph);
             List<Set<Long>> connectedComponents = connectivityInspector.connectedSets();
             boolean finish = false;
-            while(connectedComponents.size() > 1 && !finish) {
+           /* while(connectedComponents.size() > 1 && !finish) {
                 finish = true;
                 
                 connectedComponents.sort(new Comparator<Set<Long>>() {
@@ -207,9 +222,7 @@ public class BasicCommunityStreamer implements CommunityStreamer {
                 stubs[(int)(long)target].degreeLeft--;
                 stubs[(int)(long)target].degreeUsed++;
                 edges.add(new Edge(source,target));
-            }
-            */
-            
+            }*/
             
             ArrayList<Integer> finalExcessDegree = new ArrayList<Integer>();
             finalExcessDegree.ensureCapacity(degrees.size());

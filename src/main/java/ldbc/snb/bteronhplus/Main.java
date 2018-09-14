@@ -85,7 +85,6 @@ public class Main {
                                                         "communities");
                                                         */
         
-        
         BasicCommunityStreamer communityStreamer = new BasicCommunityStreamer(arguments.modulesPrefix+
                                                         "communities");
                                                         
