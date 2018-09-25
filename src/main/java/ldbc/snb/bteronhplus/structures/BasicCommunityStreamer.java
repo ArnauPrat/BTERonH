@@ -264,37 +264,41 @@ public class BasicCommunityStreamer implements CommunityStreamer {
                     clusteringCoefficient.add(Double.parseDouble(nodeInfo[2]));
                     excessDegree.add(0);
                 }
-    
-                //System.out.println("ENTRA: "+nextCommunityId+" "+graphDegrees.size());
                 
+                System.out.println(nextCommunityId);
+    
                 /*if (community.length == 2)*/ {
-                    
-                    String[]              edgesstr = community[1].split(" ");
-                    Map<Integer, Integer> degree   = new HashMap<Integer, Integer>();
-                    for (int i = 0; i < graphDegrees.size(); ++i) {
-                        degree.put(i, 0);
-                    }
-                    
-                    for (int i = 0; i < edgesstr.length; ++i) {
-                        String[] endpoints = edgesstr[i].split(":");
-                        int      tail      = Integer.parseInt(endpoints[0]);
-                        int      head      = Integer.parseInt(endpoints[1]);
-                        tail = idMap.get(tail);
-                        head = idMap.get(head);
-                        Edge edge = new Edge(tail, head);
-                        edges.add(edge);
-                        degree.merge((int) edge.getTail(), 1, Integer::sum);
-                        degree.merge((int) edge.getHead(), 1, Integer::sum);
-                    }
-                    
-                    for (int i = 0; i < graphDegrees.size(); ++i) {
-                        Integer localDegree   = graphDegrees.get(i);
-                        Integer currentDegree = degree.get(i);
-                        excessDegree.set(i, localDegree - currentDegree);
-                        if (excessDegree.get(i) < 0) {
-                            throw new RuntimeException("Node with excess degree < 0");
+        
+                    if (community.length > 1) {
+    
+                        String[]              edgesstr = community[1].split(" ");
+                        Map<Integer, Integer> degree   = new HashMap<Integer, Integer>();
+                        for (int i = 0; i < graphDegrees.size(); ++i) {
+                            degree.put(i, 0);
+                        }
+    
+                        for (int i = 0; i < edgesstr.length; ++i) {
+                            String[] endpoints = edgesstr[i].split(":");
+                            int      tail      = Integer.parseInt(endpoints[0]);
+                            int      head      = Integer.parseInt(endpoints[1]);
+                            tail = idMap.get(tail);
+                            head = idMap.get(head);
+                            Edge edge = new Edge(tail, head);
+                            edges.add(edge);
+                            degree.merge((int) edge.getTail(), 1, Integer::sum);
+                            degree.merge((int) edge.getHead(), 1, Integer::sum);
+                        }
+    
+                        for (int i = 0; i < graphDegrees.size(); ++i) {
+                            Integer localDegree   = graphDegrees.get(i);
+                            Integer currentDegree = degree.get(i);
+                            excessDegree.set(i, localDegree - currentDegree);
+                            if (excessDegree.get(i) < 0) {
+                                throw new RuntimeException("Node with excess degree < 0");
+                            }
                         }
                     }
+                    
                     
                     CommunityModel model = new CommunityModel(graphDegrees,
                                                               excessDegree,
@@ -312,7 +316,7 @@ public class BasicCommunityStreamer implements CommunityStreamer {
                         count++;
                     } while (generatedCommunity == null && count < 100);
                 }
-                
+    
                 line = reader.readLine();
             }
         } catch (IOException e ) {
