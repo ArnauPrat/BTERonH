@@ -265,8 +265,6 @@ public class BasicCommunityStreamer implements CommunityStreamer {
                     excessDegree.add(0);
                 }
                 
-                System.out.println(nextCommunityId);
-    
                 /*if (community.length == 2)*/ {
         
                     if (community.length > 1) {
