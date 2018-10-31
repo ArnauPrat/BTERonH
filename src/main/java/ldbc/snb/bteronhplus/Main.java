@@ -78,7 +78,7 @@ public class Main {
         BlockModel blockModel = new BlockModel(blockModelData, childrenData);
 
         Random random = new Random();
-        random.setSeed(12345L);
+        //random.setSeed(12345L);
 
         //CorePeripheryCommunityStreamer communityStreamer = new CorePeripheryCommunityStreamer(graphStats,random);
         /*RealCommunityStreamer communityStreamer = new RealCommunityStreamer(arguments.modulesPrefix+
