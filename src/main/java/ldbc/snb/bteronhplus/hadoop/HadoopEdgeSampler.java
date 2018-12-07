@@ -128,7 +128,8 @@ public class HadoopEdgeSampler {
                                   partition,
                                   streamer,
                                   threadId,
-                                  numThreads);
+                                  numThreads,
+                                  false);
         }
     }
 

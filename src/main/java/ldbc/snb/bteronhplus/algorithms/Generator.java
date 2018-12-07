@@ -13,7 +13,8 @@ public class Generator {
                                    List<Map<Integer,Long>> partition,
                                    CommunityStreamer communityStreamer,
                                    int threadId,
-                                   int numThreads) throws IOException {
+                                   int numThreads,
+                                   boolean randomInter) throws IOException {
     
         // Counting total number of nodes
         long totalDegree = 0L;
@@ -81,25 +82,27 @@ public class Generator {
                         .id])/2;
                 
                 
-                    if(numEdges < (sampler.getNumCommunities()-1) && sampler.getNumCommunities() > 1){
+                    /*if(numEdges < (sampler.getNumCommunities()-1) && sampler.getNumCommunities() > 1){
                         totalNumEdgesBelowThreshold++;
                         if(numEdges < 0) totalNumEdgesNegative++;
                     } else {
                         numCommunitiesIfWellConnected++;
-                    }
+                    }*/
                 
                     sampler.generateCommunityEdges(writer,
                                                    partition.get(entry.id),
                                                    communityStreamer,
                                                    offsets[entry.id]);
                 
-                    long darwiniEdges = sampler.darwini(writer,random,offsets[entry.id]);
-                    totalExternalGeneratedEdges+=darwiniEdges;
-                    numEdges-=darwiniEdges;
-                
-                    sampler.generateConnectedGraph(writer, random, offsets[entry.id]);
-                
-                    numEdges -= sampler.getNumCommunities() - 1;
+                    if(!randomInter) {
+                        long darwiniEdges = sampler.darwini(writer, random, offsets[entry.id]);
+                        totalExternalGeneratedEdges += darwiniEdges;
+                        numEdges -= darwiniEdges;
+    
+                        sampler.generateConnectedGraph(writer, random, offsets[entry.id]);
+    
+                        numEdges -= sampler.getNumCommunities() - 1;
+                    }
                 
                     for(int i = 0; i < numEdges; ++i) {
                         long node1 = sampler.sample(random, offsets[entry.id]);

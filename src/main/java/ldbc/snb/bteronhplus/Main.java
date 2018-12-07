@@ -24,13 +24,6 @@ public class Main {
         @Parameter(names = {"-d", "--degrees"}, description = "The file with the degrees", required = true)
         public String degreesFile;
 
-        @Parameter(names = {"-cc", "--clustering"}, description = "The file with the clustering coefficient " +
-                "distributions per degree", required = true)
-        public String ccsFile;
-
-        @Parameter(names = {"-c", "--communities"}, description = "The file with the community sizes", required = true)
-        public String communitiesfile;
-
         @Parameter(names = {"-o", "--output"}, description = "The output file", required = true)
         public String outputFileName;
 
@@ -49,6 +42,14 @@ public class Main {
     
         @Parameter(names = {"-m", "--modules"}, description = "The modules file prefix", required = true)
         public String modulesPrefix;
+    
+        @Parameter(names = {"-b", "--basic"}, description = "Use the basic community streamer")
+        public boolean basic = false;
+    
+        @Parameter(names = {"-r", "--random"}, description = "Generate random inter-community structure")
+        public boolean random = false;
+        
+        
 
 
     }
@@ -59,8 +60,6 @@ public class Main {
         new JCommander(arguments, args);
     
         System.out.println("Degree file: "+arguments.degreesFile);
-        System.out.println("CCS file: "+arguments.ccsFile);
-        System.out.println("Communities file: "+arguments.communitiesfile);
         System.out.println("Density file: "+arguments.densityFileName);
         System.out.println("Modules prefix: "+arguments.modulesPrefix);
 
@@ -79,15 +78,14 @@ public class Main {
 
         Random random = new Random();
         //random.setSeed(12345L);
-
-        //CorePeripheryCommunityStreamer communityStreamer = new CorePeripheryCommunityStreamer(graphStats,random);
-        /*RealCommunityStreamer communityStreamer = new RealCommunityStreamer(arguments.modulesPrefix+
-                                                        "communities");
-                                                        */
+        CommunityStreamer communityStreamer = null;
+        if(arguments.basic) {
+            communityStreamer = new BasicCommunityStreamer(arguments.modulesPrefix+ "communities");
+    
+        } else {
+            communityStreamer = new RealCommunityStreamer(arguments.modulesPrefix + "communities");
+        }
         
-        BasicCommunityStreamer communityStreamer = new BasicCommunityStreamer(arguments.modulesPrefix+
-                                                        "communities");
-                                                        
         List<Map<Integer,Long>> partition = Partitioning.partition(random, blockModel,
                                                                    communityStreamer,
                                                                    arguments.graphSize,
@@ -105,7 +103,8 @@ public class Main {
                               partition,
                               communityStreamer,
                               0,
-                              1);
+                              1,
+                              arguments.random);
         writer.close();
     
         Partitioning.printStats(blockModel, partition, communityStreamer);
