@@ -21,14 +21,8 @@ public class Main {
 
     public static class Arguments {
 
-        @Parameter(names = {"-d", "--degrees"}, description = "The file with the degrees", required = true)
-        public String degreesFile;
-
         @Parameter(names = {"-o", "--output"}, description = "The output file", required = true)
         public String outputFileName;
-
-        @Parameter(names = {"-p", "--density"}, description = "The community densities file", required = true)
-        public String densityFileName;
 
         @Parameter(names = {"-s", "--size"}, description = "The size of the graph", required = true)
         public int graphSize;
@@ -59,15 +53,7 @@ public class Main {
         Arguments arguments = new Arguments();
         new JCommander(arguments, args);
     
-        System.out.println("Degree file: "+arguments.degreesFile);
-        System.out.println("Density file: "+arguments.densityFileName);
         System.out.println("Modules prefix: "+arguments.modulesPrefix);
-
-        /*GraphStats graphStats = new GraphStats(arguments.degreesFile,
-                                               arguments.ccsFile,
-                                               arguments.communitiesfile,
-                                               arguments.densityFileName);
-                                               */
 
 
         byte[] byteArray = Files.readAllBytes(Paths.get(arguments.communityStructureFileNamePrefix+1));
