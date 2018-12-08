@@ -99,7 +99,7 @@ public class MainHadoop {
             }
         }
     
-        RealCommunityStreamer streamer = new RealCommunityStreamer(conf.get("communitiesFile"));
+        RealCommunityStreamer streamer = new RealCommunityStreamer(conf.get("communitiesFile"), -1);
     
         Partitioning.printStats(blockModel, partition, streamer);
         /*******/

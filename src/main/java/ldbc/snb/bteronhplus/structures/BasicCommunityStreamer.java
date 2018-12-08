@@ -241,7 +241,7 @@ public class BasicCommunityStreamer implements CommunityStreamer {
         }
     }
     
-    public BasicCommunityStreamer(String communitiesFile) {
+    public BasicCommunityStreamer(String communitiesFile, int threshold) {
         Configuration conf  = new Configuration();
         communityModels = new HashMap<Integer, List<CommunityModel>>();
         communities = new ArrayList<Community>();
@@ -268,31 +268,32 @@ public class BasicCommunityStreamer implements CommunityStreamer {
                 /*if (community.length == 2)*/ {
         
                     if (community.length > 1) {
+                        if(threshold == -1 || nodesstr.length < threshold) {
+                            String[]              edgesstr = community[1].split(" ");
+                            Map<Integer, Integer> degree   = new HashMap<Integer, Integer>();
+                            for (int i = 0; i < graphDegrees.size(); ++i) {
+                                degree.put(i, 0);
+                            }
     
-                        String[]              edgesstr = community[1].split(" ");
-                        Map<Integer, Integer> degree   = new HashMap<Integer, Integer>();
-                        for (int i = 0; i < graphDegrees.size(); ++i) {
-                            degree.put(i, 0);
-                        }
+                            for (int i = 0; i < edgesstr.length; ++i) {
+                                String[] endpoints = edgesstr[i].split(":");
+                                int      tail      = Integer.parseInt(endpoints[0]);
+                                int      head      = Integer.parseInt(endpoints[1]);
+                                tail = idMap.get(tail);
+                                head = idMap.get(head);
+                                Edge edge = new Edge(tail, head);
+                                edges.add(edge);
+                                degree.merge((int) edge.getTail(), 1, Integer::sum);
+                                degree.merge((int) edge.getHead(), 1, Integer::sum);
+                            }
     
-                        for (int i = 0; i < edgesstr.length; ++i) {
-                            String[] endpoints = edgesstr[i].split(":");
-                            int      tail      = Integer.parseInt(endpoints[0]);
-                            int      head      = Integer.parseInt(endpoints[1]);
-                            tail = idMap.get(tail);
-                            head = idMap.get(head);
-                            Edge edge = new Edge(tail, head);
-                            edges.add(edge);
-                            degree.merge((int) edge.getTail(), 1, Integer::sum);
-                            degree.merge((int) edge.getHead(), 1, Integer::sum);
-                        }
-    
-                        for (int i = 0; i < graphDegrees.size(); ++i) {
-                            Integer localDegree   = graphDegrees.get(i);
-                            Integer currentDegree = degree.get(i);
-                            excessDegree.set(i, localDegree - currentDegree);
-                            if (excessDegree.get(i) < 0) {
-                                throw new RuntimeException("Node with excess degree < 0");
+                            for (int i = 0; i < graphDegrees.size(); ++i) {
+                                Integer localDegree   = graphDegrees.get(i);
+                                Integer currentDegree = degree.get(i);
+                                excessDegree.set(i, localDegree - currentDegree);
+                                if (excessDegree.get(i) < 0) {
+                                    throw new RuntimeException("Node with excess degree < 0");
+                                }
                             }
                         }
                     }

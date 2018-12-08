@@ -114,7 +114,7 @@ public class HadoopEdgeSampler {
             
             
             // Retrieve communityStreamer
-            RealCommunityStreamer streamer = new RealCommunityStreamer(communitiesFileName);
+            RealCommunityStreamer streamer = new RealCommunityStreamer(communitiesFileName,-1);
     
             Partitioning.printStats(blockModel, partition, streamer);
             

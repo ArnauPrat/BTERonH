@@ -42,6 +42,9 @@ public class Main {
     
         @Parameter(names = {"-r", "--random"}, description = "Generate random inter-community structure")
         public boolean random = false;
+    
+        @Parameter(names = {"-t", "--threshold"}, description = "Generate random inter-community structure")
+        public int threshold = -1;
         
         
 
@@ -66,10 +69,10 @@ public class Main {
         //random.setSeed(12345L);
         CommunityStreamer communityStreamer = null;
         if(arguments.basic) {
-            communityStreamer = new BasicCommunityStreamer(arguments.modulesPrefix+ "communities");
+            communityStreamer = new BasicCommunityStreamer(arguments.modulesPrefix+ "communities", arguments.threshold);
     
         } else {
-            communityStreamer = new RealCommunityStreamer(arguments.modulesPrefix + "communities");
+            communityStreamer = new RealCommunityStreamer(arguments.modulesPrefix + "communities", arguments.threshold);
         }
         
         List<Map<Integer,Long>> partition = Partitioning.partition(random, blockModel,

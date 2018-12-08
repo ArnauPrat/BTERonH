@@ -92,7 +92,7 @@ public class HadoopCommunityPartitioner {
     
             Random random = new Random();
             random.setSeed(threadId);
-            RealCommunityStreamer communityStreamer = new RealCommunityStreamer(communitiesFileName);
+            RealCommunityStreamer communityStreamer = new RealCommunityStreamer(communitiesFileName, -1);
             
             long nodesToGenerate = numNodes / numThreads;
     
